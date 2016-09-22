@@ -1,0 +1,19 @@
+# Compiled python modules.
+*.pyc
+
+# Setuptools distribution folder.
+/dist/
+
+# Python egg metadata, regenerated from source files by setuptools.
+/*.egg-info
+/*.egg
+
+#Matlab output files stored in example directories for testing
+pydream/examples/mixturemodel/*.mat
+pydream/examples/ndim_gaussian/*.mat
+
+#Coverage output file
+*.coverage
+
+#PyCharm files
+/.idea
