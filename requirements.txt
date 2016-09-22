@@ -1,0 +1,5 @@
+dill==0.2.5
+multiprocess==0.70.4
+numpy==1.11.1
+scipy==0.18.1
+wheel==0.24.0
