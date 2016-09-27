@@ -104,8 +104,8 @@ def sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose):
     else:
         args = zip(step_instances, [start]*nchains, T, [None]*nchains, [None]*nchains)  
         
-    sampled_params = np.zeros((nchains, niterations, step_instance.total_var_dimension))
-    log_ps = np.zeros((nchains, niterations, 1)) 
+    sampled_params = np.zeros((nchains, niterations*2, step_instance.total_var_dimension))
+    log_ps = np.zeros((nchains, niterations*2, 1))
     
     q0 = start
     naccepts = np.zeros((nchains))

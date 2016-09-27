@@ -12,14 +12,18 @@ import multiprocess as mp
 import numpy as np
 import pydream.Dream_shared_vars
 from pydream.Dream import Dream
-from pydream.core import run_dream, _setup_mp_dream_pool
+from pydream.core import run_dream, _setup_mp_dream_pool, sample_dream, sample_dream_pt, _sample_dream_pt
 from pydream.model import Model
 from pydream.tests.test_models import onedmodel, multidmodel, multidmodel_uniform
 from pydream.examples.corm.example_sample_corm_with_dream import run_kwargs as corm_kwargs
+from pydream.examples.corm.example_sample_corm_with_dream import likelihood as corm_like
 from pydream.examples.corm.example_sample_corm_with_dream import corm_setup
 from pydream.examples.mixturemodel.mixturemodel import run_kwargs as mix_kwargs
+from pydream.examples.mixturemodel.mixturemodel import likelihood as mix_like
 from pydream.examples.ndim_gaussian.dream_ex_ndim_gaussian import run_kwargs as ndimgauss_kwargs
+from pydream.examples.ndim_gaussian.dream_ex_ndim_gaussian import likelihood as ndimgauss_like
 from pydream.examples.robertson.example_sample_robertson_with_dream import run_kwargs as robertson_kwargs
+from pydream.examples.robertson.example_sample_robertson_with_dream import likelihood as robertson_like
 import numbers
 
 class Test_Dream_Initialization(unittest.TestCase):
@@ -529,6 +533,64 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
             self.assertTrue(last_prior == 100)
             self.assertTrue(last_like == -600)
 
+    def test_mp_sampledreamfxn(self):
+        self.params, self.like = multidmodel()
+        model = Model(self.like, self.params)
+        dream = Dream(model=model, verbose=False, save_history=False)
+
+        #Even though the pool won't be used, we need to initialize the shared variables.
+        pool = _setup_mp_dream_pool(nchains=3, niterations=10, step_instance=dream)
+        pool._initializer(*pool._initargs)
+
+        iterations = 10
+        start = np.array([-7, 8, 1.2, 0])
+        verbose = False
+        args = [dream, iterations, start, verbose]
+        sampled_params, logps = sample_dream(args)
+
+        self.assertEqual(len(sampled_params), 10)
+        self.assertEqual(len(sampled_params[0]), 4)
+        self.assertEqual(len(logps), 10)
+        self.assertEqual(len(logps[0]), 1)
+
+    def test_paralleltempering_sampledreamfxn(self):
+        self.params, self.like = multidmodel()
+        model = Model(self.like, self.params)
+        dream = Dream(model=model, verbose=False, save_history=False)
+
+        #The pool will be used within the fxn and, also, we need to initialize the shared variables.
+        pool = _setup_mp_dream_pool(nchains=3, niterations=10, step_instance=dream)
+        pool._initializer(*pool._initargs)
+
+        start = np.array([-100, 5, 8, .001])
+
+        sampled_params, logps = sample_dream_pt(nchains=3, niterations=10, step_instance=dream, start=start, pool=pool, verbose=False)
+
+        self.assertEqual(len(sampled_params), 3)
+        self.assertEqual(len(sampled_params[0]), 20)
+        self.assertEqual(len(sampled_params[0][0]), 4)
+        self.assertEqual(len(logps), 3)
+        self.assertEqual(len(logps[0]), 20)
+        self.assertEqual(len(logps[0][0]), 1)
+
+    def test_mp_paralleltempering_sampledreamfxn(self):
+        self.params, self.like = multidmodel()
+        model = Model(self.like, self.params)
+        dream = Dream(model=model, verbose=False, save_history=False)
+
+        # Even though the pool won't be used, we need to initialize the shared variables.
+        pool = _setup_mp_dream_pool(nchains=3, niterations=10, step_instance=dream)
+        pool._initializer(*pool._initargs)
+
+        start = np.array([-.33, 10, 0, 99])
+        T = .33
+        last_loglike = -300
+        last_logprior = -100
+        args = [dream, start, T, last_loglike, last_logprior]
+        qnew, logprior_new, loglike_new, dream_instance = _sample_dream_pt(args)
+
+        self.assertTrue(isinstance(qnew, np.ndarray))
+        self.assertTrue((logprior_new + loglike_new) >= -400)
     
 class Test_Dream_Full_Algorithm(unittest.TestCase):
 
@@ -577,6 +639,10 @@ class Test_DREAM_examples(unittest.TestCase):
         corm_kwargs['niterations'] = 100
         corm_kwargs['verbose'] = False
         corm_setup()
+        #Check likelihood fxn works
+        logp = corm_like([-5, -3, .1, 10, 8, 4, .33, -.58, 99, 1, 0, 11])
+
+        #Check entire algorithm will run and give results of the expected shape
         sampled_params, logps = run_dream(**corm_kwargs)
         self.assertEqual(len(sampled_params), nchains)
         self.assertEqual(len(sampled_params[0]), 100)
@@ -593,6 +659,11 @@ class Test_DREAM_examples(unittest.TestCase):
         mix_kwargs['niterations'] = 100
         mix_kwargs['verbose'] = False
         mix_kwargs['save_history'] = False
+
+        #Check likelihood fxn works
+        logp = mix_like(np.array([1, -9, 3, .04, 2, -8, 11, .001, -1, 10]))
+
+        #Check that sampling runs and gives output of expected shape
         sampled_params, logps = run_dream(**mix_kwargs)
         self.assertEqual(len(sampled_params), nchains)
         self.assertEqual(len(sampled_params[0]), 100)
@@ -607,6 +678,11 @@ class Test_DREAM_examples(unittest.TestCase):
         ndimgauss_kwargs['niterations'] = 100
         ndimgauss_kwargs['verbose'] = False
         ndimgauss_kwargs['save_history'] = False
+
+        #Check likelihood fxn runs
+        logp = ndimgauss_like(np.random.random_sample((100,))*10)
+
+        #Check sampling runs and gives output of expected shape
         sampled_params, logps = run_dream(**ndimgauss_kwargs)
         self.assertEqual(len(sampled_params), nchains)
         self.assertEqual(len(sampled_params[0]), 100)
@@ -621,6 +697,11 @@ class Test_DREAM_examples(unittest.TestCase):
         robertson_kwargs['niterations'] = 100
         robertson_kwargs['verbose'] = False
         robertson_kwargs['save_history'] = False
+
+        #Check likelihood fxn runs
+        logp = robertson_like([3, 8, .11])
+
+        #Check sampling runs and gives output of expected shape
         sampled_params, logps = run_dream(**robertson_kwargs)
         self.assertEqual(len(sampled_params), nchains)
         self.assertEqual(len(sampled_params[0]), 100)
