@@ -16,15 +16,19 @@ from pysb.integrate import Solver
 import numpy as np
 from pydream.parameters import UniformParam
 from scipy.stats import norm
+import os
+import inspect
 
 from pysb.examples.robertson import model
 
 #Initialize PySB solver object for running simulations.  Simulation timespan should match experimental data.
 tspan = np.linspace(0,40)
 solver = Solver(model, tspan)
+solver.run()
 
 #Load experimental data to which Robertson model will be fit here.  The "experimental data" in this case is just the total C trajectory at the default model parameters with a standard deviation of .01.
-location= 'exp_data/'
+pydream_path = os.path.dirname(inspect.getfile(run_dream))
+location= pydream_path+'/examples/robertson/exp_data/'
 exp_data_ctot = np.loadtxt(location+'exp_data_ctotal.txt')
 
 exp_data_sd_ctot = np.loadtxt(location+'exp_data_sd_ctotal.txt')
@@ -78,10 +82,14 @@ sampled_parameter_names = [parameters_to_sample]
 #DREAM should be run with at least 3 chains.
 nchains = 5
 
-#Run DREAM sampling.  Documentation of DREAM options is in Dream.py.
-sampled_params, log_ps = run_dream(sampled_parameter_names, likelihood, niterations=10000, nchains=nchains, multitry=False, gamma_levels=4, adapt_gamma=True, history_thin=1, model_name='robertson_dreamzs_5chain_', verbose=True)
+if __name__ == '__main__':
+    #Run DREAM sampling.  Documentation of DREAM options is in Dream.py.
+    sampled_params, log_ps = run_dream(sampled_parameter_names, likelihood, niterations=10000, nchains=nchains, multitry=False, gamma_levels=4, adapt_gamma=True, history_thin=1, model_name='robertson_dreamzs_5chain', verbose=True)
     
-#Save sampling output (sampled parameter values and their corresponding logps).
-for chain in range(len(sampled_params)):
-    np.save('robertson_dreamzs_5chain_sampled_params_chain_'+str(chain), sampled_params[chain])
-    np.save('robertson_dreamzs_5chain_logps_chain_'+str(chain), log_ps[chain])
+    #Save sampling output (sampled parameter values and their corresponding logps).
+    for chain in range(len(sampled_params)):
+        np.save('robertson_dreamzs_5chain_sampled_params_chain_'+str(chain), sampled_params[chain])
+        np.save('robertson_dreamzs_5chain_logps_chain_'+str(chain), log_ps[chain])
+
+else:
+    run_kwargs = {'parameters':sampled_parameter_names, 'likelihood':likelihood, 'niterations':10000, 'nchains':nchains, 'multitry':False, 'gamma_levels':4, 'adapt_gamma':True, 'history_thin':1, 'model_name':'robertson_dreamzs_5chain', 'verbose':True}

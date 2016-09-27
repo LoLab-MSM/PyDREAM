@@ -18,6 +18,8 @@ from pydream.tests.test_models import onedmodel, multidmodel, multidmodel_unifor
 from pydream.examples.corm.example_sample_corm_with_dream import run_kwargs as corm_kwargs
 from pydream.examples.corm.example_sample_corm_with_dream import corm_setup
 from pydream.examples.mixturemodel.mixturemodel import run_kwargs as mix_kwargs
+from pydream.examples.ndim_gaussian.dream_ex_ndim_gaussian import run_kwargs as ndimgauss_kwargs
+from pydream.examples.robertson.example_sample_robertson_with_dream import run_kwargs as robertson_kwargs
 import numbers
 
 class Test_Dream_Initialization(unittest.TestCase):
@@ -590,6 +592,7 @@ class Test_DREAM_examples(unittest.TestCase):
         nchains = mix_kwargs['nchains']
         mix_kwargs['niterations'] = 100
         mix_kwargs['verbose'] = False
+        mix_kwargs['save_history'] = False
         sampled_params, logps = run_dream(**mix_kwargs)
         self.assertEqual(len(sampled_params), nchains)
         self.assertEqual(len(sampled_params[0]), 100)
@@ -598,6 +601,33 @@ class Test_DREAM_examples(unittest.TestCase):
         self.assertEqual(len(logps[0]), 100)
         self.assertEqual(len(logps[0][0]), 1)
         remove('mixturemodel_seed.npy')
+
+    def test_ndimgaussian_example(self):
+        nchains = ndimgauss_kwargs['nchains']
+        ndimgauss_kwargs['niterations'] = 100
+        ndimgauss_kwargs['verbose'] = False
+        ndimgauss_kwargs['save_history'] = False
+        sampled_params, logps = run_dream(**ndimgauss_kwargs)
+        self.assertEqual(len(sampled_params), nchains)
+        self.assertEqual(len(sampled_params[0]), 100)
+        self.assertEqual(len(sampled_params[0][0]), 100)
+        self.assertEqual(len(logps), nchains)
+        self.assertEqual(len(logps[0]), 100)
+        self.assertEqual(len(logps[0][0]), 1)
+        remove('ndim_gaussian_seed.npy')
+
+    def test_robertson_example(self):
+        nchains = robertson_kwargs['nchains']
+        robertson_kwargs['niterations'] = 100
+        robertson_kwargs['verbose'] = False
+        robertson_kwargs['save_history'] = False
+        sampled_params, logps = run_dream(**robertson_kwargs)
+        self.assertEqual(len(sampled_params), nchains)
+        self.assertEqual(len(sampled_params[0]), 100)
+        self.assertEqual(len(sampled_params[0][0]), 3)
+        self.assertEqual(len(logps), nchains)
+        self.assertEqual(len(logps[0]), 100)
+        self.assertEqual(len(logps[0][0]), 1)
 
 if __name__ == '__main__':
     unittest.main()
