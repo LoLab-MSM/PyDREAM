@@ -49,7 +49,9 @@ def likelihood(params):
 params = FlatParam('params', value=mean)       
  
 starts = [m[chain] for chain in range(3)]
-      
+
+if __name__ == '__main__':
+
 sampled_params, log_ps = run_dream([params], likelihood, niterations=50000, nchains=3, start=starts, start_random=False, save_history=True, history_file='mixturemodel_seed.npy', multitry=5, parallel=False)
     
 for chain in range(len(sampled_params)):
