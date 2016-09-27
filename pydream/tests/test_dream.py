@@ -12,10 +12,11 @@ import multiprocess as mp
 import numpy as np
 import pydream.Dream_shared_vars
 from pydream.Dream import Dream
-from pydream.core import run_dream
+from pydream.core import run_dream, _setup_mp_dream_pool
 from pydream.model import Model
-from pydream.tests.test_models import onedmodel, multidmodel
-
+from pydream.tests.test_models import onedmodel, multidmodel, multidmodel_uniform
+from pydream.examples.corm.example_sample_corm_with_dream import run_kwargs as corm_kwargs
+import numbers
 
 class Test_Dream_Initialization(unittest.TestCase):
     
@@ -325,7 +326,7 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
             self.assertEqual(np.array_equal(q_proposal, proposed_pts[0]), True)
     
     def test_crossover_prob_estimation(self):
-        self.param, self.like = onedmodel()
+        self.param, self.like = multidmodel()
         model = Model(self.like, self.param)
         dream = Dream(model=model, save_history=False)
         starting_crossover = dream.CR_probabilities
@@ -334,8 +335,8 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
         nCR = dream.nCR
         CR_vals = dream.CR_values
         ncrossover_updates = mp.Array('d', [0]*nCR)
-        current_position_arr = mp.Array('d', [1, 2, 3, 4, 5])
-        dream.nchains = len(current_position_arr)
+        current_position_arr = mp.Array('d', [1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4])
+        dream.nchains = 5
         delta_m = mp.Array('d', [0]*nCR)
         dream.chain_n = 0
         pydream.Dream_shared_vars.cross_probs = crossover_probabilities
@@ -343,17 +344,17 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
         pydream.Dream_shared_vars.ncr_updates = ncrossover_updates
         pydream.Dream_shared_vars.current_positions = current_position_arr
         pydream.Dream_shared_vars.delta_m = delta_m
-        q0 = np.array([1])
-        q_new = np.array([1])
+        q0 = np.array([1, 2, 3, 4])
+        q_new = np.array([1, 2, 3, 4])
         new_cr_probs = dream.estimate_crossover_probabilities(dream.total_var_dimension, q0, q_new, CR_vals[0])
         self.assertEqual(np.array_equal(new_cr_probs, starting_crossover), True)
-        q_new = np.array([7])
+        q_new = np.array([1.2, 2.2, 3.3, 4.4])
         new_cr_probs = dream.estimate_crossover_probabilities(dream.total_var_dimension, q0, q_new, CR_vals[0])
         self.assertEqual(np.array_equal(new_cr_probs, starting_crossover), True)
-        q_new = np.array([9])
+        q_new = np.array([2, 3, 4, 5])
         new_cr_probs = dream.estimate_crossover_probabilities(dream.total_var_dimension, q0, q_new, CR_vals[1])
         self.assertEqual(np.array_equal(new_cr_probs, starting_crossover), True)
-        q_new = np.array([11])
+        q_new = np.array([11, -15, 20, 9])
         new_cr_probs = dream.estimate_crossover_probabilities(dream.total_var_dimension, q0, q_new, CR_vals[2])
         self.assertEqual(np.array_equal(new_cr_probs, starting_crossover), False)
         self.assertGreater(new_cr_probs[2], starting_crossover[2])
@@ -444,7 +445,7 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
         remove('test_history_loading_DREAM_chain_history.npy')
         
     def test_crossover_file_loading(self):
-        self.param, self.like = onedmodel()
+        self.param, self.like = multidmodel()
         old_crossovervals = np.array([.45, .20, .35])
         np.save('testing_crossoverval_load_DREAM.npy', old_crossovervals)
         model = Model(self.like, self.param)
@@ -459,6 +460,71 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
         remove('testing_crossover_load_DREAM_chain_adapted_gammalevelprob.npy')
         remove('testing_crossoverval_load_DREAM.npy')
         remove('testing_crossover_load_DREAM_chain_history.npy')
+
+    def test_astep_onedmodel(self):
+        """Test a single step with a one-dimensional model with a normal parameter."""
+        self.param, self.like = onedmodel()
+        model = Model(self.like, self.param)
+        dream = Dream(model=model, save_history=False, verbose=False)
+        #Even though we're calling the steps separately we need to call these functions
+        # to initialize the shared memory arrays that are called in the step fxn
+        pool = _setup_mp_dream_pool(nchains=3, niterations=10, step_instance=dream)
+        pool._initializer(*pool._initargs)
+
+        #Test initial step (when last logp and prior values aren't set)
+        q_new, last_prior, last_like = dream.astep(q0=np.array([-5]))
+
+        self.assertTrue(isinstance(q_new, np.ndarray))
+        self.assertTrue(isinstance(last_prior, numbers.Number))
+        self.assertTrue(isinstance(last_like, numbers.Number))
+
+        #Test later iteration after last logp and last prior have been set
+        q_new, last_prior, last_like = dream.astep(q0=np.array(8),last_logprior=-300, last_loglike=-500)
+
+        self.assertTrue(isinstance(q_new, np.ndarray))
+        self.assertTrue(isinstance(last_prior, numbers.Number))
+        self.assertTrue(isinstance(last_like, numbers.Number))
+
+        if np.any(q_new != np.array(8)):
+            self.assertTrue(last_prior+last_like >= -800)
+
+        else:
+            self.assertTrue(last_prior == -300)
+            self.assertTrue(last_like == -500)
+
+    def test_astep_multidmodel_uniform(self):
+        """Test a single step of DREAM with a multi-dimensional model and uniform prior."""
+
+        self.param, self.like = multidmodel_uniform()
+        model = Model(self.like, self.param)
+        dream = Dream(model=model, save_history=False, verbose=False)
+
+        # Even though we're calling the steps separately we need to call these functions
+        # to initialize the shared memory arrays that are called in the step fxn
+        pool = _setup_mp_dream_pool(nchains=3, niterations=10, step_instance=dream)
+        pool._initializer(*pool._initargs)
+
+        # Test initial step (when last logp and prior values aren't set)
+        q_new, last_prior, last_like = dream.astep(q0=np.array([-5, 4, -3, 0]))
+
+        self.assertTrue(isinstance(q_new, np.ndarray))
+        self.assertTrue(isinstance(last_prior, numbers.Number))
+        self.assertTrue(isinstance(last_like, numbers.Number))
+
+        # Test later iteration after last logp and last prior have been set
+        q_new, last_prior, last_like = dream.astep(q0=np.array([8, 4, -2, 9]), last_logprior=100, last_loglike=-600)
+
+        self.assertTrue(isinstance(q_new, np.ndarray))
+        self.assertTrue(isinstance(last_prior, numbers.Number))
+        self.assertTrue(isinstance(last_like, numbers.Number))
+
+        if np.any(q_new != np.array(8)):
+            self.assertTrue(last_prior + last_like >= -500)
+
+        else:
+            self.assertTrue(last_prior == 100)
+            self.assertTrue(last_like == -600)
+
     
 class Test_Dream_Full_Algorithm(unittest.TestCase):
 
@@ -499,6 +565,23 @@ class Test_Dream_Full_Algorithm(unittest.TestCase):
         remove('test_history_correct_DREAM_chain_history.npy')
         remove('test_history_correct_DREAM_chain_adapted_crossoverprob.npy')
         remove('test_history_correct_DREAM_chain_adapted_gammalevelprob.npy')
+
+class Test_DREAM_examples(unittest.TestCase):
+
+    def test_CORM_example(self):
+        nchains = corm_kwargs['nchains']
+        corm_kwargs['niterations'] = 100
+        corm_kwargs['verbose'] = False
+        sampled_params, logps = run_dream(**corm_kwargs)
+        self.assertEqual(len(sampled_params), nchains)
+        self.assertEqual(len(sampled_params[0]), 100)
+        self.assertEqual(len(sampled_params[0][0]), 12)
+        self.assertEqual(len(logps), nchains)
+        self.assertEqual(len(logps[0]), 100)
+        self.assertEqual(len(logps[0][0]), 1)
+        remove('corm_dreamzs_5chain_DREAM_chain_adapted_crossoverprob.npy')
+        remove('corm_dreamzs_5chain_DREAM_chain_adapted_gammalevelprob.npy')
+        remove('corm_dreamzs_5chain_DREAM_chain_history.npy')
 
 if __name__ == '__main__':
     unittest.main()

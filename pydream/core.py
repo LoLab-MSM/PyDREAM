@@ -12,6 +12,7 @@ import Dream_shared_vars
 from Dream import Dream, DreamPool
 from model import Model
 import traceback
+import os
 
 def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, restart=False, verbose=True, tempering=False, **kwargs):
 
@@ -30,7 +31,7 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
         step_instance = Dream(model=model, variables=parameters, history_file=kwargs['model_name']+'_DREAM_chain_history.npy', crossover_file=kwargs['model_name']+'_DREAM_chain_adapted_crossoverprob.npy', gamma_file=kwargs['model_name']+'_DREAM_chain_adapted_gammalevelprob.npy', verbose=verbose, **kwargs)
 
     else:
-        step_instance = Dream(model=model, variables=parameters, **kwargs)
+        step_instance = Dream(model=model, variables=parameters, verbose=verbose, **kwargs)
 
     pool = _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=start)
 
@@ -228,7 +229,7 @@ def _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=None):
         if niterations < step_instance.history_thin:
             arr_dim = ((np.floor(nchains*niterations/step_instance.history_thin)+nchains)*step_instance.total_var_dimension)+(step_instance.nseedchains*step_instance.total_var_dimension)
         else:
-            arr_dim = np.floor(((nchains*niterations*step_instance.total_var_dimension)/step_instance.history_thin))+(step_instance.nseedchains*step_instance.total_var_dimension)
+            arr_dim = np.floor(((nchains*niterations/step_instance.history_thin)*step_instance.total_var_dimension))+(step_instance.nseedchains*step_instance.total_var_dimension)
             
     min_nseedchains = 2*len(step_instance.DEpairs)*nchains
     
@@ -262,8 +263,10 @@ def _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=None):
             print('Warning: start position provided but random_start set to True.  Overrode random_start value and starting walk at provided start position.')
             step_instance.start_random = False
 
-    p = DreamPool(nchains, initializer=_mp_dream_init, initargs=(history_arr, current_position_arr, shared_nchains, crossover_probabilities, ncrossover_updates, delta_m, gamma_probabilities, ngamma_updates, delta_m_gamma, n, tf, ))
-    
+    #p = DreamPool(nchains, initializer=_mp_dream_init, initargs=(history_arr, current_position_arr, shared_nchains, crossover_probabilities, ncrossover_updates, delta_m, gamma_probabilities, ngamma_updates, delta_m_gamma, n, tf, ))
+    #p = mp.pool.ThreadPool(nchains, initializer=_mp_dream_init, initargs=(history_arr, current_position_arr, shared_nchains, crossover_probabilities, ncrossover_updates, delta_m, gamma_probabilities, ngamma_updates, delta_m_gamma, n, tf, ))
+    p = mp.Pool(nchains, initializer=_mp_dream_init, initargs=(history_arr, current_position_arr, shared_nchains, crossover_probabilities, ncrossover_updates, delta_m, gamma_probabilities, ngamma_updates, delta_m_gamma, n, tf, ))
+
     return p
 
 def _mp_dream_init(arr, cp_arr, nchains, crossover_probs, ncrossover_updates, delta_m, gamma_probs, ngamma_updates, delta_m_gamma, val, switch):

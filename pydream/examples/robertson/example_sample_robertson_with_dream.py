@@ -11,10 +11,10 @@ Created on Tue Dec  9 15:26:46 2014
 @author: Erin
 """
 
-from core import run_dream
+from pydream.core import run_dream
 from pysb.integrate import Solver
 import numpy as np
-from parameters import UniformParam
+from pydream.parameters import UniformParam
 from scipy.stats import norm
 
 from pysb.examples.robertson import model
@@ -79,7 +79,7 @@ sampled_parameter_names = [parameters_to_sample]
 nchains = 5
 
 #Run DREAM sampling.  Documentation of DREAM options is in Dream.py.
-sampled_params, log_ps = run_dream(sampled_parameter_names, likelihood, niterations=100000, nchains=nchains, multitry=False, gamma_levels=4, adapt_gamma=True, history_thin=1, model_name='robertson_dreamzs_5chain_', verbose=True)
+sampled_params, log_ps = run_dream(sampled_parameter_names, likelihood, niterations=10000, nchains=nchains, multitry=False, gamma_levels=4, adapt_gamma=True, history_thin=1, model_name='robertson_dreamzs_5chain_', verbose=True)
     
 #Save sampling output (sampled parameter values and their corresponding logps).
 for chain in range(len(sampled_params)):

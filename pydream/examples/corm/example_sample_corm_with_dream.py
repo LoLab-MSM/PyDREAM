@@ -11,20 +11,24 @@ Created on Tue Dec  9 15:26:46 2014
 @author: Erin
 """
 
-from core import run_dream
+from pydream.core import run_dream
 from pysb.integrate import Solver
 import numpy as np
-from parameters import NormalParam
+from pydream.parameters import NormalParam
 from scipy.stats import norm
+import inspect
+import os.path
 
 from corm import model as cox2_model
+
+pydream_path = os.path.dirname(inspect.getfile(run_dream))
 
 #Initialize PySB solver object for running simulations.  Simulation timespan should match experimental data.
 tspan = np.linspace(0,10, num=100)
 solver = Solver(cox2_model, tspan)
 
 #Load experimental data to which CORM model will be fit here
-location= 'exp_data/'
+location= pydream_path+'/examples/corm/exp_data/'
 exp_data_PG = np.loadtxt(location+'exp_data_pg.txt')
 exp_data_PGG = np.loadtxt(location+'exp_data_pgg.txt')
 
@@ -147,10 +151,17 @@ nchains = 5
 for idx in kf_idxs:
     cox2_model.parameters[idx].value = 10**generic_kf
 
-#Run DREAM sampling.  Documentation of DREAM options is in Dream.py.
-sampled_params, log_ps = run_dream(sampled_parameter_names, likelihood, niterations=100000, nchains=nchains, multitry=False, gamma_levels=4, adapt_gamma=True, history_thin=1, model_name='corm_dreamzs_5chain_', verbose=True)
-    
-#Save sampling output (sampled parameter values and their corresponding logps).
-for chain in range(len(sampled_params)):
-    np.save('corm_dreamzs_5chain_sampled_params_chain_'+str(chain), sampled_params[chain])
-    np.save('corm_dreamzs_5chain_logps_chain_'+str(chain), log_ps[chain])
+if __name__ == '__main__':
+    # Run DREAM sampling.  Documentation of DREAM options is in Dream.py.
+    sampled_params, log_ps = run_dream(parameters=sampled_parameter_names, likelihood=likelihood, niterations=100000, nchains=nchains,
+                                       multitry=False, gamma_levels=4, adapt_gamma=True, history_thin=1,
+                                       model_name='corm_dreamzs_5chain', verbose=True)
+
+    # Save sampling output (sampled parameter values and their corresponding logps).
+    for chain in range(len(sampled_params)):
+        np.save('corm_dreamzs_5chain_sampled_params_chain_' + str(chain), sampled_params[chain])
+        np.save('corm_dreamzs_5chain_logps_chain_' + str(chain), log_ps[chain])
+
+else:
+    run_kwargs = {'parameters':sampled_parameter_names, 'likelihood':likelihood, 'niterations':100000, 'nchains':nchains, \
+                  'multitry':False, 'gamma_levels':4, 'adapt_gamma':True, 'history_thin':1, 'model_name':'corm_dreamzs_5chain', 'verbose':True}

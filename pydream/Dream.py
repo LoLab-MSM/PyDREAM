@@ -16,6 +16,7 @@ import traceback
 import multiprocess as mp
 import multiprocess.pool as mp_pool
 import time
+import os
 
 class Dream():
     """An implementation of the MT-DREAM(ZS) algorithm introduced in:
@@ -71,21 +72,57 @@ class Dream():
             self.variables = self.model.sampled_parameters
         else:
             self.variables = variables
+
+        #Calculate total variable dimension and set boundaries if using uniform priors.
+        self.boundaries = False
+        self.total_var_dimension = 0
+        for var in self.variables:
+            self.total_var_dimension += var.dsize
+            if isinstance(var, UniformParam):
+                self.boundaries = True
+
+        if self.boundaries:
+            self.boundary_mask = np.zeros((self.total_var_dimension), dtype=bool)
+            self.mins = []
+            self.maxs = []
+            n = 0
+            for var in self.variables:
+                if isinstance(var, UniformParam):
+                    self.boundary_mask[n:n + var.dsize] = True
+                    self.mins.append(var.lower)
+                    self.maxs.append(var.upper)
+                n += var.dsize
+
+            self.mins = np.concatenate([vals for vals in self.mins])
+            self.maxs = np.concatenate([vals for vals in self.maxs])
+
         self.nseedchains = nseedchains
         self.nCR = nCR
+
+        #If the number of crossover values is greater than the total variable dimension, set it to be the total variable dimension
+        if self.nCR > self.total_var_dimension:
+            self.nCR = self.total_var_dimension
+            print('Warning: the total number of crossover values specified ('+str(nCR)+') is less than the total dimension of all variables ('+str(self.total_var_dimension)+').  Setting the number of crossover values to be equal to the total variable dimension.')
+
+        if self.total_var_dimension == 1 and adapt_crossover:
+            adapt_crossover = False
+            print('Warning: the total variable dimension = 1, so crossover values will not be adapted, even though crossover adaptation was requested.')
+
         self.ngamma = gamma_levels
         self.njoint_cr_gamma_probs = nCR*gamma_levels
         self.crossover_burnin = crossover_burnin
         self.crossover_file = crossover_file
         if crossover_file:
             self.CR_probabilities = np.load(crossover_file)
-            if adapt_crossover:
+            self.nCR = len(self.CR_probabilities)
+            self.adapt_crossover = adapt_crossover
+            if self.adapt_crossover:
                 print('Warning: Crossover values loaded but adapt_crossover = True.  Overrode adapt_crossover input and not adapting crossover values.')
                 self.adapt_crossover = False
         else:
             self.CR_probabilities = [1/float(self.nCR) for i in range(self.nCR)]
             self.adapt_crossover = adapt_crossover
-        
+
         if gamma_file:
             self.gamma_probabilities = np.load(gamma_file)
             if adapt_gamma:
@@ -94,8 +131,8 @@ class Dream():
         else:
             self.gamma_probabilities = [1/float(self.ngamma) for i in range(self.ngamma)]
             self.adapt_gamma = adapt_gamma
-            
-            
+
+
         self.CR_values = np.array([m/float(self.nCR) for m in range(1, self.nCR+1)])  
         self.gamma_level_values = np.array([m for m in range(1, self.ngamma+1)])
         self.DEpairs = np.linspace(1, DEpairs, num=DEpairs) #This is delta in original Matlab code
@@ -111,28 +148,7 @@ class Dream():
         self.lamb = lamb #This is e sub d in DREAM papers
         self.zeta = zeta #This is epsilon in DREAM papers
         self.last_logp = None
-        self.boundaries = False
-        self.total_var_dimension = 0
-        for var in self.variables:
-            self.total_var_dimension += var.dsize
-            if isinstance(var, UniformParam):
-              self.boundaries = True
-        
-        if self.boundaries:
-            self.boundary_mask = np.zeros((self.total_var_dimension), dtype=bool)
-            self.mins = []
-            self.maxs = []
-            n = 0
-            for var in variables:
-                if isinstance(var, UniformParam):
-                    self.boundary_mask[n:n+var.dsize] = True
-                    self.mins.append(var.lower)
-                    self.maxs.append(var.upper)
-                n += var.dsize
 
-            self.mins = np.concatenate([vals for vals in self.mins])
-            self.maxs = np.concatenate([vals for vals in self.maxs])
-            #self.maxs = np.ravel(self.maxs)
         if self.nseedchains == None:
             self.nseedchains = self.total_var_dimension*10
         gamma_array = np.zeros((self.ngamma, DEpairs, self.total_var_dimension))
@@ -197,6 +213,7 @@ class Dream():
                 raise Exception('Dream should be run with multiple chains in parallel.  Set nchains > 1.')          
         
         try:
+
             if last_loglike != None:
                 self.last_like = last_loglike
                 self.last_prior = last_logprior
@@ -411,6 +428,9 @@ class Dream():
         current_positions = current_positions.reshape((self.nchains, ndim))
         
         sd_by_dim = np.std(current_positions, axis=0)
+
+        #Replace any zeros in sd array with a very small number to avoid division by zero errors
+        sd_by_dim[sd_by_dim==0] = 1e-12
         
         change = np.nan_to_num(np.sum(((q_new - q0)/sd_by_dim)**2))
         
@@ -422,7 +442,6 @@ class Dream():
         ncr_updates = np.array(Dream_shared_vars.ncr_updates[0:self.nCR])
         
         if np.all(delta_ms != 0) == True:
-
             for m in range(self.nCR):
                 cross_probs[m] = (Dream_shared_vars.delta_m[m]/Dream_shared_vars.ncr_updates[m])*self.nchains
             cross_probs = cross_probs/np.sum(cross_probs)
@@ -717,7 +736,7 @@ class Dream():
         nhistoryrecs = Dream_shared_vars.count.value+nseedchains
         start_loc = nhistoryrecs*ndimensions
         end_loc = start_loc+ndimensions
-        Dream_shared_vars.history[start_loc:end_loc] = np.array(q_new).flatten()      
+        Dream_shared_vars.history[start_loc:end_loc] = np.array(q_new).flatten()
 
         Dream_shared_vars.count.value += 1
         if self.save_history and len_history == (nhistoryrecs+1)*ndimensions:
@@ -767,6 +786,9 @@ def metrop_select(mr, q, q0):
 
         
 class NoDaemonProcess(mp.Process):
+    def __init__(self, group=None, target=None, name=None, args=(), kwargs={}):
+        mp.Process.__init__(self, group, target, name, args, kwargs)
+
     # make 'daemon' attribute always return False
     def _get_daemon(self):
         return False
@@ -777,5 +799,7 @@ class NoDaemonProcess(mp.Process):
 #A subclass of multiprocessing.pool.Pool that allows processes to launch child processes (this is necessary for Dream to use multi-try)
 #Taken from http://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic
 class DreamPool(mp_pool.Pool):
+    def __init__(self, processes=None, initializer=None, initargs=None, maxtasksperchild=None):
+        mp_pool.Pool.__init__(self, processes, initializer, initargs, maxtasksperchild)
     Process = NoDaemonProcess
         

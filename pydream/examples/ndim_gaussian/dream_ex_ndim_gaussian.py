@@ -10,8 +10,8 @@ Created on Wed Apr  8 18:01:34 2015
 
 import numpy as np
 import os
-from parameters import FlatParam
-from core import run_dream
+from pydream.parameters import FlatParam
+from pydream.core import run_dream
 
 def Latin_hypercube(minn, maxn, N):
     y = np.random.rand(N, len(minn))
@@ -54,11 +54,11 @@ starts = [m[chain] for chain in range(3)]
 
 params = FlatParam('params', value=mu)       
     
-sampled_params, log_ps = run_dream([params], likelihood, niterations=50000, nchains=3, start=starts, start_random=False, save_history=True, adapt_gamma=False, gamma_levels=1, tempering=False, history_file='ndim_gaussian_seed.npy', multitry=5, parallel=False)
+sampled_params, log_ps = run_dream([params], likelihood, niterations=50000, nchains=3, start=starts, start_random=False, save_history=True, adapt_gamma=False, gamma_levels=1, tempering=False, history_file='ndim_gaussian_seed.npy', multitry=5, parallel=False, model_name='ndim_gaussian')
     
 for chain in range(len(sampled_params)):
-    np.save('ndimgauss_mtdreamzs_3chain_a1_sampled_params_chain_'+str(chain), sampled_params[chain])
-    np.save('ndimgauu_mtdreamzs_3chain_a1_logps_chain_'+str(chain), log_ps[chain])
+    np.save('ndimgauss_mtdreamzs_3chain_sampled_params_chain_'+str(chain), sampled_params[chain])
+    np.save('ndimgauss_mtdreamzs_3chain_logps_chain_'+str(chain), log_ps[chain])
 
 os.remove('ndim_gaussian_seed.npy')
 

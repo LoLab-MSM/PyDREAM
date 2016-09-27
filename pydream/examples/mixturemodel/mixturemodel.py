@@ -11,8 +11,8 @@ Created on Wed Apr  8 18:01:34 2015
 import numpy as np
 import os
 import scipy.linalg
-from parameters import FlatParam
-from core import run_dream
+from pydream.parameters import FlatParam
+from pydream.core import run_dream
 
 log_F = np.array([-10.2880, -9.5949])
 
@@ -53,8 +53,8 @@ starts = [m[chain] for chain in range(3)]
 sampled_params, log_ps = run_dream([params], likelihood, niterations=50000, nchains=3, start=starts, start_random=False, save_history=True, history_file='mixturemodel_seed.npy', multitry=5, parallel=False)
     
 for chain in range(len(sampled_params)):
-    np.save('mixmod_mtdreamzs_3chain_d1_sampled_params_chain_'+str(chain), sampled_params[chain])
-    np.save('mixmod_mtdreamzs_3chain_d1_logps_chain_'+str(chain), log_ps[chain])
+    np.save('mixmod_mtdreamzs_3chain_sampled_params_chain_'+str(chain), sampled_params[chain])
+    np.save('mixmod_mtdreamzs_3chain_logps_chain_'+str(chain), log_ps[chain])
 
 os.remove('mixturemodel_seed.npy')
 

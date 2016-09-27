@@ -1,0 +1,8 @@
+[run]
+branch = True
+omit = pydream/tests/*
+source=pydream
+concurrency=multiprocessing
+
+[report]
+show_missing = True
