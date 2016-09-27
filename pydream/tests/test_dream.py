@@ -16,6 +16,8 @@ from pydream.core import run_dream, _setup_mp_dream_pool
 from pydream.model import Model
 from pydream.tests.test_models import onedmodel, multidmodel, multidmodel_uniform
 from pydream.examples.corm.example_sample_corm_with_dream import run_kwargs as corm_kwargs
+from pydream.examples.corm.example_sample_corm_with_dream import corm_setup
+from pydream.examples.mixturemodel.mixturemodel import run_kwargs as mix_kwargs
 import numbers
 
 class Test_Dream_Initialization(unittest.TestCase):
@@ -572,6 +574,7 @@ class Test_DREAM_examples(unittest.TestCase):
         nchains = corm_kwargs['nchains']
         corm_kwargs['niterations'] = 100
         corm_kwargs['verbose'] = False
+        corm_setup()
         sampled_params, logps = run_dream(**corm_kwargs)
         self.assertEqual(len(sampled_params), nchains)
         self.assertEqual(len(sampled_params[0]), 100)
@@ -582,6 +585,19 @@ class Test_DREAM_examples(unittest.TestCase):
         remove('corm_dreamzs_5chain_DREAM_chain_adapted_crossoverprob.npy')
         remove('corm_dreamzs_5chain_DREAM_chain_adapted_gammalevelprob.npy')
         remove('corm_dreamzs_5chain_DREAM_chain_history.npy')
+
+    def test_mixturemodel_example(self):
+        nchains = mix_kwargs['nchains']
+        mix_kwargs['niterations'] = 100
+        mix_kwargs['verbose'] = False
+        sampled_params, logps = run_dream(**mix_kwargs)
+        self.assertEqual(len(sampled_params), nchains)
+        self.assertEqual(len(sampled_params[0]), 100)
+        self.assertEqual(len(sampled_params[0][0]), 10)
+        self.assertEqual(len(logps), nchains)
+        self.assertEqual(len(logps[0]), 100)
+        self.assertEqual(len(logps[0][0]), 1)
+        remove('mixturemodel_seed.npy')
 
 if __name__ == '__main__':
     unittest.main()

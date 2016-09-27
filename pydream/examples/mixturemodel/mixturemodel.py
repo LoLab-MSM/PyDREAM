@@ -52,13 +52,18 @@ starts = [m[chain] for chain in range(3)]
 
 if __name__ == '__main__':
 
-sampled_params, log_ps = run_dream([params], likelihood, niterations=50000, nchains=3, start=starts, start_random=False, save_history=True, history_file='mixturemodel_seed.npy', multitry=5, parallel=False)
+    sampled_params, log_ps = run_dream([params], likelihood, niterations=50000, nchains=3, start=starts, start_random=False, save_history=True, history_file='mixturemodel_seed.npy', multitry=5, parallel=False)
     
-for chain in range(len(sampled_params)):
-    np.save('mixmod_mtdreamzs_3chain_sampled_params_chain_'+str(chain), sampled_params[chain])
-    np.save('mixmod_mtdreamzs_3chain_logps_chain_'+str(chain), log_ps[chain])
+    for chain in range(len(sampled_params)):
+        np.save('mixmod_mtdreamzs_3chain_sampled_params_chain_'+str(chain), sampled_params[chain])
+        np.save('mixmod_mtdreamzs_3chain_logps_chain_'+str(chain), log_ps[chain])
 
-os.remove('mixturemodel_seed.npy')
+    os.remove('mixturemodel_seed.npy')
+
+else:
+    run_kwargs = {'parameters':params, 'likelihood':likelihood, 'niterations':50000, 'nchains':3, 'start':starts, 'start_random':False,\
+                  'multitry':5, 'adapt_gamma':True, 'history_thin':1, 'model_name':'corm_dreamzs_5chain', 'verbose':True, \
+                  'save_history':True, 'history_file':'mixturemodel_seed.npy', 'parallel':False}
 
     
     
