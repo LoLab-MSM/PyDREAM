@@ -7,7 +7,8 @@ Created on Tue Jun  7 14:58:09 2016
 #Parameters defined for simple example statistical models for testing DREAM
 """
 
-from pydream.parameters import NormalParam, UniformParam
+from pydream.parameters import SampledParam
+from scipy.stats import norm, uniform
 import numpy as np
 
 def onedmodel():
@@ -15,7 +16,7 @@ def onedmodel():
     
     mu = -2
     sd = 3
-    x = NormalParam('x', value=1, mu=mu, sd=sd)    
+    x = SampledParam(norm, loc=mu, scale=sd)
     like = simple_likelihood   
     
     return [x], like
@@ -26,7 +27,7 @@ def multidmodel():
     mu = np.array([-6.6, 3, 1.0, -.12])
     sd = np.array([.13, 5, .9, 1.0])
     
-    x = NormalParam('x', value=[1]*len(mu), mu=mu, sd=sd)
+    x = SampledParam(norm, loc=mu, scale=sd)
     like = simple_likelihood
     
     return [x], like
@@ -36,8 +37,9 @@ def multidmodel_uniform():
 
     lower = np.array([-5, -9, 5, 3])
     upper = np.array([10, 0, 7, 8])
+    range = upper-lower
 
-    x = UniformParam('x', value=[1]*len(lower), lower=lower, upper=upper)
+    x = SampledParam(uniform, loc=lower, scale=range)
     like =simple_likelihood
 
     return [x], like

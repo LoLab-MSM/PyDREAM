@@ -10,13 +10,12 @@ A Python version of MT-DREAM(ZS) that will run without PyMC.
 import numpy as np
 import random
 import Dream_shared_vars
-from parameters import UniformParam
+from scipy.stats import uniform
 from datetime import datetime
 import traceback
 import multiprocess as mp
 import multiprocess.pool as mp_pool
 import time
-import os
 
 class Dream():
     """An implementation of the MT-DREAM(ZS) algorithm introduced in:
@@ -78,8 +77,9 @@ class Dream():
         self.total_var_dimension = 0
         for var in self.variables:
             self.total_var_dimension += var.dsize
-            if isinstance(var, UniformParam):
-                self.boundaries = True
+            if hasattr(var, 'dist'):
+                if var.dist.dist.name == 'uniform':
+                    self.boundaries = True
 
         if self.boundaries:
             self.boundary_mask = np.zeros((self.total_var_dimension), dtype=bool)
@@ -87,10 +87,11 @@ class Dream():
             self.maxs = []
             n = 0
             for var in self.variables:
-                if isinstance(var, UniformParam):
+                if var.dist.dist.name == 'uniform':
                     self.boundary_mask[n:n + var.dsize] = True
-                    self.mins.append(var.lower)
-                    self.maxs.append(var.upper)
+                    interval = var.interval()
+                    self.mins.append(interval[0])
+                    self.maxs.append(interval[1])
                 n += var.dsize
 
             self.mins = np.concatenate([vals for vals in self.mins])

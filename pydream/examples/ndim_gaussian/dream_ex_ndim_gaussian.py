@@ -25,7 +25,7 @@ def Latin_hypercube(minn, maxn, N):
     return x
 
 
-d = 100
+d = 200
 A = .5 * np.identity(d) + .5 * np.ones((d,d))
 C = np.zeros((d,d))
 for i in range(d):
@@ -52,10 +52,10 @@ def likelihood(param_vec):
 
 starts = [m[chain] for chain in range(3)]
 
-params = FlatParam('params', value=mu)       
+params = FlatParam(test_value=mu)
 
 if __name__ == '__main__':
-    sampled_params, log_ps = run_dream([params], likelihood, niterations=50000, nchains=3, start=starts, start_random=False, save_history=True, adapt_gamma=False, gamma_levels=1, tempering=False, history_file='ndim_gaussian_seed.npy', multitry=5, parallel=False, model_name='ndim_gaussian')
+    sampled_params, log_ps = run_dream([params], likelihood, niterations=150000, nchains=3, start=starts, start_random=False, save_history=True, adapt_gamma=False, gamma_levels=1, tempering=False, history_file='ndim_gaussian_seed.npy', multitry=5, parallel=False, model_name='ndim_gaussian')
     
     for chain in range(len(sampled_params)):
         np.save('ndimgauss_mtdreamzs_3chain_sampled_params_chain_'+str(chain), sampled_params[chain])

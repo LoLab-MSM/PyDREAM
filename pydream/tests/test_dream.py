@@ -680,13 +680,13 @@ class Test_DREAM_examples(unittest.TestCase):
         ndimgauss_kwargs['save_history'] = False
 
         #Check likelihood fxn runs
-        logp = ndimgauss_like(np.random.random_sample((100,))*10)
+        logp = ndimgauss_like(np.random.random_sample((200,))*10)
 
         #Check sampling runs and gives output of expected shape
         sampled_params, logps = run_dream(**ndimgauss_kwargs)
         self.assertEqual(len(sampled_params), nchains)
         self.assertEqual(len(sampled_params[0]), 100)
-        self.assertEqual(len(sampled_params[0][0]), 100)
+        self.assertEqual(len(sampled_params[0][0]), 200)
         self.assertEqual(len(logps), nchains)
         self.assertEqual(len(logps[0]), 100)
         self.assertEqual(len(logps[0][0]), 1)

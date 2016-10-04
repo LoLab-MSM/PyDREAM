@@ -14,7 +14,7 @@ Created on Tue Dec  9 15:26:46 2014
 from pydream.core import run_dream
 from pysb.integrate import Solver
 import numpy as np
-from pydream.parameters import NormalParam
+from pydream.parameters import SampledParam
 from scipy.stats import norm
 import inspect
 import os.path
@@ -63,27 +63,18 @@ def corm_setup():
 
     # Add PySB rate parameters to be sampled as unobserved random variables to DREAM with normal priors.
 
-    kd_AA_cat2 = NormalParam('KD_AA_cat2', value=1, mu=np.log10(
-        cox2_model.parameters['kr_AA_cat2'].value / cox2_model.parameters['kf_AA_cat2'].value), sd=1.5)
-    kcat_AA2 = NormalParam('kcat_AA2', value=1, mu=np.log10(cox2_model.parameters['kcat_AA2'].value), sd=.66)
-    kd_AA_cat3 = NormalParam('KD_AA_cat3', value=1, mu=np.log10(
-        cox2_model.parameters['kr_AA_cat3'].value / cox2_model.parameters['kf_AA_cat3'].value), sd=1.5)
-    kcat_AA3 = NormalParam('kcat_AA3', value=1, mu=np.log10(cox2_model.parameters['kcat_AA1'].value), sd=.66)
-    kd_AG_cat2 = NormalParam('KD_AG_cat2', value=1, mu=np.log10(
-        cox2_model.parameters['kr_AG_cat2'].value / cox2_model.parameters['kf_AG_cat2'].value), sd=1.5)
-    kd_AG_cat3 = NormalParam('KD_AG_cat3', value=1, mu=np.log10(
-        cox2_model.parameters['kr_AG_cat3'].value / cox2_model.parameters['kf_AG_cat3'].value), sd=1.5)
-    kcat_AG3 = NormalParam('kcat_AG3', value=1, mu=np.log10(cox2_model.parameters['kcat_AG3'].value), sd=.66)
-    kd_AA_allo1 = NormalParam('KD_AA_allo1', value=1, mu=np.log10(
-        cox2_model.parameters['kr_AA_allo1'].value / cox2_model.parameters['kf_AA_allo1'].value), sd=1)
-    kd_AA_allo2 = NormalParam('KD_AA_allo2', value=1, mu=np.log10(
-        cox2_model.parameters['kr_AA_allo2'].value / cox2_model.parameters['kf_AA_allo2'].value), sd=1)
-    kd_AA_allo3 = NormalParam('KD_AA_allo3', value=1, mu=np.log10(
-        cox2_model.parameters['kr_AA_allo3'].value / cox2_model.parameters['kf_AA_allo3'].value), sd=1)
-    kd_AG_allo1 = NormalParam('KD_AG_allo1', value=1, mu=np.log10(
-        cox2_model.parameters['kr_AG_allo1'].value / cox2_model.parameters['kf_AG_allo1'].value), sd=1)
-    kd_AG_allo2 = NormalParam('KD_AG_allo2', value=1, mu=np.log10(
-        cox2_model.parameters['kr_AG_allo2'].value / cox2_model.parameters['kf_AG_allo2'].value), sd=1)
+    kd_AA_cat2 = SampledParam(norm, loc=np.log10(cox2_model.parameters['kr_AA_cat2'].value / cox2_model.parameters['kf_AA_cat2'].value), scale=1.5)
+    kcat_AA2 = SampledParam(norm, loc=np.log10(cox2_model.parameters['kcat_AA2'].value), scale=.66)
+    kd_AA_cat3 = SampledParam(norm, loc=np.log10(cox2_model.parameters['kr_AA_cat3'].value / cox2_model.parameters['kf_AA_cat3'].value), scale=1.5)
+    kcat_AA3 = SampledParam(norm, loc=np.log10(cox2_model.parameters['kcat_AA1'].value), scale=.66)
+    kd_AG_cat2 = SampledParam(norm, loc=np.log10(cox2_model.parameters['kr_AG_cat2'].value / cox2_model.parameters['kf_AG_cat2'].value), scale=1.5)
+    kd_AG_cat3 = SampledParam(norm, loc=np.log10(cox2_model.parameters['kr_AG_cat3'].value / cox2_model.parameters['kf_AG_cat3'].value), scale=1.5)
+    kcat_AG3 = SampledParam(norm, loc=np.log10(cox2_model.parameters['kcat_AG3'].value), scale=.66)
+    kd_AA_allo1 = SampledParam(norm, loc=np.log10(cox2_model.parameters['kr_AA_allo1'].value / cox2_model.parameters['kf_AA_allo1'].value), scale=1)
+    kd_AA_allo2 = SampledParam(norm, loc=np.log10(cox2_model.parameters['kr_AA_allo2'].value / cox2_model.parameters['kf_AA_allo2'].value), scale=1)
+    kd_AA_allo3 = SampledParam(norm, loc=np.log10(cox2_model.parameters['kr_AA_allo3'].value / cox2_model.parameters['kf_AA_allo3'].value), scale=1)
+    kd_AG_allo1 = SampledParam(norm, loc=np.log10(cox2_model.parameters['kr_AG_allo1'].value / cox2_model.parameters['kf_AG_allo1'].value), scale=1)
+    kd_AG_allo2 = SampledParam(norm, loc=np.log10(cox2_model.parameters['kr_AG_allo2'].value / cox2_model.parameters['kf_AG_allo2'].value), scale=1)
 
     sampled_parameter_names = [kd_AA_cat2, kcat_AA2, kd_AA_cat3, kcat_AA3, kd_AG_cat2, kd_AG_cat3, kcat_AG3,
                                kd_AA_allo1, kd_AA_allo2, kd_AA_allo3, kd_AG_allo1, kd_AG_allo2]

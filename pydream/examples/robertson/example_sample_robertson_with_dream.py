@@ -14,8 +14,8 @@ Created on Tue Dec  9 15:26:46 2014
 from pydream.core import run_dream
 from pysb.integrate import Solver
 import numpy as np
-from pydream.parameters import UniformParam
-from scipy.stats import norm
+from pydream.parameters import SampledParam
+from scipy.stats import norm, uniform
 import os
 import inspect
 
@@ -73,9 +73,8 @@ def likelihood(parameter_vector):
 original_params = np.log10([param.value for param in model.parameters_rules()])
 #Set upper and lower limits for uniform prior to be 3 orders of magnitude above and below original parameter values.
 lower_limits   = original_params - 3
-upper_limits = original_params + 3 
 
-parameters_to_sample = UniformParam('parameters_to_sample', value = [1]*len(lower_limits), lower=lower_limits, upper=upper_limits)  
+parameters_to_sample = SampledParam(uniform, loc=lower_limits, scale=6)
 
 sampled_parameter_names = [parameters_to_sample]
 

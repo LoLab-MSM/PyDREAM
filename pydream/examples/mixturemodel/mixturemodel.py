@@ -26,7 +26,7 @@ C = np.identity(d)
 L = scipy.linalg.cholesky(C, lower=False)
 diagL = np.diag(L)
 logDetSigma = 2 * np.sum(np.log(diagL))
-cov = np.identity(10)*5
+cov = np.identity(10)
 mean = np.linspace(0, 0, num=10)
 #Create initial samples matrix m that will be loaded in as DREAM history file
 m = np.random.multivariate_normal(mean, cov, size=100)
@@ -46,7 +46,7 @@ def likelihood(params):
     
     return log_L
     
-params = FlatParam('params', value=mean)       
+params = FlatParam(test_value=mean)
  
 starts = [m[chain] for chain in range(3)]
 
