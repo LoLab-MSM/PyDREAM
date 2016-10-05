@@ -303,7 +303,8 @@ class Dream():
             else:  
                 if run_snooker:
                     total_proposed_logp = q_logp + snooker_logp_prop
-                    snooker_current_logp = np.log(np.linalg.norm(q0-z))*(self.total_var_dimension-1)
+                    norm = np.linalg.norm(q0-z)
+                    snooker_current_logp = np.log(norm, where=norm != 0)*(self.total_var_dimension-1)
                     total_old_logp = self.last_logp + snooker_current_logp
                     
                     q_new = metrop_select(np.nan_to_num(total_proposed_logp - total_old_logp), q, q0)
@@ -380,7 +381,7 @@ class Dream():
                     with Dream_shared_vars.nchains.get_lock():
                         nchains_finished_burnin = Dream_shared_vars.nchains.value    
                 time.sleep(10)
-                
+
                 if self.adapt_gamma:
                     with Dream_shared_vars.gamma_level_probs.get_lock():
                         self.gamma_probabilities = Dream_shared_vars.gamma_level_probs[0:self.ngamma]
@@ -400,8 +401,8 @@ class Dream():
         """Add current position of chain to shared array available to other chains."""
         
         if self.nchains == None:
-           current_positions = np.frombuffer(Dream_shared_vars.current_positions.get_obj()) 
-           self.nchains = len(current_positions)/ndimensions  
+            current_positions = np.frombuffer(Dream_shared_vars.current_positions.get_obj())
+            self.nchains = len(current_positions)/ndimensions
         
         if self.chain_n == None:
             with Dream_shared_vars.nchains.get_lock():
@@ -410,19 +411,19 @@ class Dream():
         
         #We only need to have the current position of all chains for estimating the crossover probabilities during burn-in so don't bother updating after that
         if self.iter < self.crossover_burnin+1:
-            start_cp = self.chain_n*ndimensions
-            end_cp = start_cp+ndimensions
+            start_cp = int(self.chain_n*ndimensions)
+            end_cp = int(start_cp+ndimensions)
             Dream_shared_vars.current_positions[start_cp:end_cp] = np.array(q_new).flatten()        
         
     def estimate_crossover_probabilities(self, ndim, q0, q_new, CR):
         """Adapt crossover probabilities during crossover burn-in period."""
-            
-        cross_probs = Dream_shared_vars.cross_probs[0:self.nCR]   
+
+        cross_probs = Dream_shared_vars.cross_probs[0:self.nCR]
         
         #Compute squared normalized jumping distance
-        m_loc = np.where(self.CR_values == CR)[0]
+        m_loc = int(np.where(self.CR_values == CR)[0])
 
-        Dream_shared_vars.ncr_updates[m_loc] += 1   
+        Dream_shared_vars.ncr_updates[m_loc] += 1
         
         current_positions = np.frombuffer(Dream_shared_vars.current_positions.get_obj())
 
@@ -462,7 +463,7 @@ class Dream():
         
         gamma_level_probs = Dream_shared_vars.gamma_level_probs[0:self.ngamma]
             
-        gamma_loc = np.where(self.gamma_level_values == gamma_level)[0]
+        gamma_loc = int(np.where(self.gamma_level_values == gamma_level)[0])
             
         Dream_shared_vars.ngamma_updates[gamma_loc] += 1
             
@@ -552,8 +553,8 @@ class Dream():
             chain_num = random.sample(range(Dream_shared_vars.count.value+nseedchains), DEpairs*2)
         else:
             chain_num = random.sample(range(Dream_shared_vars.count.value+nseedchains), 1)
-        start_locs = [i*ndimensions for i in chain_num]
-        end_locs = [i+ndimensions for i in start_locs]
+        start_locs = [int(i*ndimensions) for i in chain_num]
+        end_locs = [int(i+ndimensions) for i in start_locs]
         sampled_chains = [Dream_shared_vars.history[start_loc:end_loc] for start_loc, end_loc in zip(start_locs, end_locs)]
         return sampled_chains
         
@@ -662,16 +663,19 @@ class Dream():
             zP = np.nan_to_num(np.array([np.sum(diff_chains_to_be_projected[point]*proj_vec_diff[point])/D[point] for point in range(n_proposed_pts)]))          
             dx = self.gamma*zP
             proposed_pts = [q0 + dx[point] for point in range(n_proposed_pts)]
-            snooker_logp = [np.log(np.linalg.norm(proposed_pts[point]-sampled_history_pt[point]))*(self.total_var_dimension-1) for point in range(n_proposed_pts)]
+            norms = [np.linalg.norm(proposed_pts[point] - sampled_history_pt[point]) for point in range(n_proposed_pts)]
+            snooker_logp = [np.log(norm, where= norm != 0)*(self.total_var_dimension-1) for norm in norms]
+
         else:
             D = np.dot(proj_vec_diff, proj_vec_diff)
 
             #Orthogonal projection of chains_to_projected onto projection vector  
             diff_chains_to_be_projected = chains_to_be_projected[0]-chains_to_be_projected[1]
-            zP = np.nan_to_num(np.array([np.sum(diff_chains_to_be_projected*proj_vec_diff)/D]))
+            zP = np.nan_to_num(np.array([np.sum(np.divide((diff_chains_to_be_projected*proj_vec_diff), D, where= D != 0))]))
             dx = self.gamma*zP
             proposed_pts = q0 + dx
-            snooker_logp = np.log(np.linalg.norm(proposed_pts-sampled_history_pt))*(self.total_var_dimension-1)
+            norm = np.linalg.norm(proposed_pts-sampled_history_pt)
+            snooker_logp = np.log(norm, where= norm != 0)*(self.total_var_dimension-1)
         
         return proposed_pts, snooker_logp, sampled_history_pt
     
@@ -735,8 +739,8 @@ class Dream():
     def record_history(self, nseedchains, ndimensions, q_new, len_history):
         """Record accepted point in history."""
         nhistoryrecs = Dream_shared_vars.count.value+nseedchains
-        start_loc = nhistoryrecs*ndimensions
-        end_loc = start_loc+ndimensions
+        start_loc = int(nhistoryrecs*ndimensions)
+        end_loc = int(start_loc+ndimensions)
         Dream_shared_vars.history[start_loc:end_loc] = np.array(q_new).flatten()
 
         Dream_shared_vars.count.value += 1

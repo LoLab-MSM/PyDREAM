@@ -78,7 +78,10 @@ def sample_dream(args):
             old_params = q0
             sampled_params[iteration], log_prior , log_like = step_fxn(q0)
             log_ps[iteration] = log_like + log_prior
-            q0 = sampled_params[iteration]   
+            q0 = sampled_params[iteration]
+            if old_params is None:
+                old_params = q0
+
             if np.any(q0 != old_params):
                 naccepts += 1
                 naccepts100win += 1
