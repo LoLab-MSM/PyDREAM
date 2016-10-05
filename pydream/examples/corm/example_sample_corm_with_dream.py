@@ -170,6 +170,7 @@ if __name__ == '__main__':
                                        multitry=False, gamma_levels=4, adapt_gamma=True, history_thin=1,
                                        model_name='corm_dreamzs_5chain', verbose=True)
 
+
     # Save sampling output (sampled parameter values and their corresponding logps).
     for chain in range(len(sampled_params)):
         np.save('corm_dreamzs_5chain_sampled_params_chain_' + str(chain), sampled_params[chain])

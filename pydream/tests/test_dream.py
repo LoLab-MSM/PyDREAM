@@ -12,7 +12,7 @@ import multiprocess as mp
 import numpy as np
 import pydream.Dream_shared_vars
 from pydream.Dream import Dream
-from pydream.core import run_dream, _setup_mp_dream_pool, sample_dream, sample_dream_pt, _sample_dream_pt
+from pydream.core import run_dream, _setup_mp_dream_pool, _sample_dream, _sample_dream_pt, _sample_dream_pt_chain
 from pydream.model import Model
 from pydream.tests.test_models import onedmodel, multidmodel, multidmodel_uniform
 from pydream.examples.corm.example_sample_corm_with_dream import run_kwargs as corm_kwargs
@@ -571,7 +571,7 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
         start = np.array([-7, 8, 1.2, 0])
         verbose = False
         args = [dream, iterations, start, verbose]
-        sampled_params, logps = sample_dream(args)
+        sampled_params, logps = _sample_dream(args)
 
         self.assertEqual(len(sampled_params), 10)
         self.assertEqual(len(sampled_params[0]), 4)
@@ -590,7 +590,7 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
 
         start = np.array([-100, 5, 8, .001])
 
-        sampled_params, logps = sample_dream_pt(nchains=3, niterations=10, step_instance=dream, start=start, pool=pool, verbose=False)
+        sampled_params, logps = _sample_dream_pt(nchains=3, niterations=10, step_instance=dream, start=start, pool=pool, verbose=False)
 
         self.assertEqual(len(sampled_params), 3)
         self.assertEqual(len(sampled_params[0]), 20)
@@ -614,7 +614,7 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
         last_loglike = -300
         last_logprior = -100
         args = [dream, start, T, last_loglike, last_logprior]
-        qnew, logprior_new, loglike_new, dream_instance = _sample_dream_pt(args)
+        qnew, logprior_new, loglike_new, dream_instance = _sample_dream_pt_chain(args)
 
         self.assertTrue(isinstance(qnew, np.ndarray))
         self.assertTrue((logprior_new + loglike_new) >= -400)
