@@ -53,11 +53,11 @@ def likelihood(parameter_vector):
         
         model.parameters[pname].value = 10**(pvalue)
     
-    #Simulate "experimentally measured" Ctotal values. 
+    #Simulate experimentally measured Ctotal values.
     
     solver.run()
     
-    #Calculate log probability contribution from simulated "experimental" values.
+    #Calculate log probability contribution from simulated experimental values.
     
     logp_ctotal = np.sum(like_ctot.logpdf(solver.yobs['C_total']))
     

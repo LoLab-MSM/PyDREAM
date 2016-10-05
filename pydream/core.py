@@ -12,9 +12,20 @@ import Dream_shared_vars
 from Dream import Dream, DreamPool
 from model import Model
 import traceback
-import os
 
 def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, restart=False, verbose=True, tempering=False, **kwargs):
+    """Run DREAM given a set of parameters with priors and a likelihood function.
+    Arguments:
+        parameters: A list of parameter priors
+        likelihood: A user-defined likelihood function
+        nchains: The number of parallel DREAM chains to run.  Default = 5
+        niterations: The number of algorithm iterations to run. Default = 50,000
+        start: Either a list of start locations to initialize chains in, or a single start location to initialize all chains in. Default: None
+        restart: Whether run is a continuation of an earlier run.  Pass this with the model_name argument to automatically load previous history and crossover probability files.  Default: False
+        verbose: Whether to print verbose output (including acceptance or rejection of moves and the current acceptance rate).  Default: True
+        tempering: Whether to use parallel tempering for the DREAM chains.  Warning: this feature is untested.  Use at your own risk! Default: False
+        **kwargs: Other arguments that will be passed to the Dream class on initialization.  For more information, see Dream.py.
+        """
 
     if restart:
         if start == None:
@@ -37,7 +48,7 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
 
     if tempering:        
         
-        sampled_params, log_ps = sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose=verbose)
+        sampled_params, log_ps = _sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose=verbose)
     
     else:
     
@@ -46,13 +57,13 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
         else:
             args = zip([step_instance]*nchains, [niterations]*nchains, [start]*nchains, [verbose]*nchains)
 
-        returned_vals = pool.map(sample_dream, args)
+        returned_vals = pool.map(_sample_dream, args)
         sampled_params = [val[0] for val in returned_vals]
         log_ps = [val[1] for val in returned_vals]   
     
     return sampled_params, log_ps
 
-def sample_dream(args):
+def _sample_dream(args):
 
     try: 
         dream_instance = args[0]
@@ -93,7 +104,7 @@ def sample_dream(args):
 
     return sampled_params, log_ps
 
-def sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose):
+def _sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose):
     
     T = np.zeros((nchains))
     T[0] = 1.
@@ -136,7 +147,7 @@ def sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose):
                 naccepts100win = np.zeros((nchains))
                 nacceptsT100win = np.zeros((nchains))
 
-        returned_vals = pool.map(_sample_dream_pt, args)
+        returned_vals = pool.map(_sample_dream_pt_chain, args)
         qnews = [val[0] for val in returned_vals]
         logprinews = [val[1] for val in returned_vals]
         loglikenews = [val[2] for val in returned_vals]
@@ -200,7 +211,7 @@ def sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose):
     return sampled_params, log_ps
             
 
-def _sample_dream_pt(args):
+def _sample_dream_pt_chain(args):
 
     dream_instance = args[0]
     start = args[1]
@@ -211,8 +222,6 @@ def _sample_dream_pt(args):
     q1, logprior1, loglike1 = step_fxn(start, T, last_loglike, last_logpri)
     
     return q1, logprior1, loglike1, dream_instance
-            
-    
 
 def _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=None):
     
