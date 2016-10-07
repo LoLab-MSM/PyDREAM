@@ -15,9 +15,8 @@ from pydream.Dream import Dream
 from pydream.core import run_dream, _setup_mp_dream_pool, _sample_dream, _sample_dream_pt, _sample_dream_pt_chain
 from pydream.model import Model
 from pydream.tests.test_models import onedmodel, multidmodel, multidmodel_uniform
-from pydream.examples.corm.example_sample_corm_with_dream import run_kwargs as corm_kwargs
 from pydream.examples.corm.example_sample_corm_with_dream import likelihood as corm_like
-from pydream.examples.corm.example_sample_corm_with_dream import corm_setup
+from pydream.examples.corm.example_sample_corm_with_dream import run_kwargs as corm_kwargs
 from pydream.examples.mixturemodel.mixturemodel import run_kwargs as mix_kwargs
 from pydream.examples.mixturemodel.mixturemodel import likelihood as mix_like
 from pydream.examples.ndim_gaussian.dream_ex_ndim_gaussian import run_kwargs as ndimgauss_kwargs
@@ -668,7 +667,6 @@ class Test_DREAM_examples(unittest.TestCase):
         nchains = corm_kwargs['nchains']
         corm_kwargs['niterations'] = 100
         corm_kwargs['verbose'] = False
-        corm_setup()
         #Check likelihood fxn works
         logp = corm_like([-5, -3, .1, 10, 8, 4, .33, -.58, 99, 1, 0, 11])
 
