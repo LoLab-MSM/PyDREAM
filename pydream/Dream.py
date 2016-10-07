@@ -10,7 +10,6 @@ A Python version of MT-DREAM(ZS) that will run without PyMC.
 import numpy as np
 import random
 import Dream_shared_vars
-from scipy.stats import uniform
 from datetime import datetime
 import traceback
 import multiprocess as mp

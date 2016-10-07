@@ -13,6 +13,7 @@ import os
 import scipy.linalg
 from pydream.parameters import FlatParam
 from pydream.core import run_dream
+from pydream.convergence import  Gelman_Rubin
 
 log_F = np.array([-10.2880, -9.5949])
 
@@ -52,13 +53,37 @@ starts = [m[chain] for chain in range(3)]
 
 if __name__ == '__main__':
 
-    sampled_params, log_ps = run_dream([params], likelihood, niterations=50000, nchains=3, start=starts, start_random=False, save_history=True, history_file='mixturemodel_seed.npy', multitry=5, parallel=False)
+    niterations=50000
+    # Run DREAM sampling.  Documentation of DREAM options is in Dream.py.
+    converged = False
+    total_iterations = niterations
+    nchains=3
+
+    sampled_params, log_ps = run_dream([params], likelihood, niterations=niterations, nchains=nchains, start=starts, start_random=False, save_history=True, history_file='mixturemodel_seed.npy', multitry=5, parallel=False)
     
     for chain in range(len(sampled_params)):
-        np.save('mixmod_mtdreamzs_3chain_sampled_params_chain_'+str(chain), sampled_params[chain])
-        np.save('mixmod_mtdreamzs_3chain_logps_chain_'+str(chain), log_ps[chain])
+        np.save('mixmod_mtdreamzs_3chain_sampled_params_chain_'+str(chain)+'_'+str(total_iterations), sampled_params[chain])
+        np.save('mixmod_mtdreamzs_3chain_logps_chain_'+str(chain)+'_'+str(total_iterations), log_ps[chain])
 
     os.remove('mixturemodel_seed.npy')
+
+    try:
+        #Plot output
+        import seaborn as sns
+        from matplotlib import pyplot as plt
+        total_iterations = len(sampled_params[0])
+        burnin = total_iterations/2
+        samples = np.concatenate((sampled_params[0][burnin:, :], sampled_params[1][burnin:, :], sampled_params[2][burnin:, :]))
+
+        ndims = len(sampled_params[0][0])
+        colors = sns.color_palette(n_colors=ndims)
+        for dim in range(ndims):
+            fig = plt.figure()
+            sns.distplot(samples[:, dim], color=colors[dim])
+            fig.savefig('PyDREAM_example_MixtureModel_dimension_'+str(dim))
+
+    except ImportError:
+        pass
 
 else:
     run_kwargs = {'parameters':params, 'likelihood':likelihood, 'niterations':50000, 'nchains':3, 'start':starts, 'start_random':False,\

@@ -12,6 +12,7 @@ import numpy as np
 import os
 from pydream.parameters import FlatParam
 from pydream.core import run_dream
+from pydream.convergence import  Gelman_Rubin
 
 def Latin_hypercube(minn, maxn, N):
     y = np.random.rand(N, len(minn))
@@ -55,17 +56,73 @@ starts = [m[chain] for chain in range(3)]
 params = FlatParam(test_value=mu)
 
 if __name__ == '__main__':
-    sampled_params, log_ps = run_dream([params], likelihood, niterations=150000, nchains=3, start=starts, start_random=False, save_history=True, adapt_gamma=False, gamma_levels=1, tempering=False, history_file='ndim_gaussian_seed.npy', multitry=5, parallel=False, model_name='ndim_gaussian')
+    niterations = 150000
+    # Run DREAM sampling.  Documentation of DREAM options is in Dream.py.
+    converged = False
+    total_iterations = niterations
+    nchains = 3
+
+    sampled_params, log_ps = run_dream([params], likelihood, niterations=niterations, nchains=nchains, start=starts, start_random=False, save_history=True, adapt_gamma=False, gamma_levels=1, tempering=False, history_file='ndim_gaussian_seed.npy', multitry=5, parallel=False, model_name='ndim_gaussian')
     
     for chain in range(len(sampled_params)):
-        np.save('ndimgauss_mtdreamzs_3chain_sampled_params_chain_'+str(chain), sampled_params[chain])
-        np.save('ndimgauss_mtdreamzs_3chain_logps_chain_'+str(chain), log_ps[chain])
+        np.save('ndimgauss_mtdreamzs_3chain_sampled_params_chain_'+str(chain)+'_'+str(total_iterations), sampled_params[chain])
+        np.save('ndimgauss_mtdreamzs_3chain_logps_chain_'+str(chain)+'_'+str(total_iterations), log_ps[chain])
 
     os.remove('ndim_gaussian_seed.npy')
 
+    # Check convergence and continue sampling if not converged
+
+    GR = Gelman_Rubin(sampled_params)
+    print 'At iteration: ', total_iterations, ' GR = ', GR
+    np.savetxt('ndimgauss_mtdreamzs_3chain_GelmanRubin_iteration_' + str(total_iterations) + '.txt', GR)
+
+    old_samples = sampled_params
+    if np.any(GR > 1.2):
+        starts = [sampled_params[chain][-1, :] for chain in range(nchains)]
+        while not converged:
+            total_iterations += niterations
+
+            sampled_params, log_ps = run_dream([params], likelihood, niterations=niterations, nchains=nchains,
+                                               start=starts, start_random=False, save_history=True, adapt_gamma=False,
+                                               gamma_levels=1, tempering=False, multitry=5, parallel=False,
+                                               model_name='ndim_gaussian', restart=True)
+
+            for chain in range(len(sampled_params)):
+                np.save('ndimgauss_mtdreamzs_3chain_sampled_params_chain_' + str(chain) + '_' + str(total_iterations),
+                        sampled_params[chain])
+                np.save('ndimgauss_mtdreamzs_3chain_logps_chain_' + str(chain) + '_' + str(total_iterations),
+                        log_ps[chain])
+
+        old_samples = [np.concatenate((old_samples[chain], sampled_params[chain])) for chain in range(nchains)]
+        GR = Gelman_Rubin(old_samples)
+        print 'At iteration: ', total_iterations, ' GR = ', GR
+        np.savetxt('ndimgauss_mtdreamzs_5chain_GelmanRubin_iteration_' + str(total_iterations)+'.txt', GR)
+
+        if np.all(GR < 1.2):
+            converged = True
+
+    try:
+        # Plot output
+        import seaborn as sns
+        from matplotlib import pyplot as plt
+
+        total_iterations = len(old_samples[0])
+        burnin = total_iterations / 2
+        samples = np.concatenate((old_samples[0][burnin:, :], old_samples[1][burnin:, :], old_samples[2][burnin:, :]))
+
+        ndims = len(old_samples[0][0])
+        colors = sns.color_palette(n_colors=ndims)
+        for dim in range(ndims):
+            fig = plt.figure()
+            sns.distplot(samples[:, dim], color=colors[dim])
+            fig.savefig('PyDREAM_example_NDimGauss_dimension_' + str(dim))
+
+    except ImportError:
+        pass
+
 else:
 
-    run_kwargs = {'parameters':[params], 'likelihood':likelihood, 'niterations':50000, 'nchains':3, 'start':starts, 'start_random':False, 'save_history':True, 'adapt_gamma':False, 'gamma_levels':1, 'tempering':False, 'history_file':'ndim_gaussian_seed.npy', 'multitry':5, 'parallel':False, 'model_name':'ndim_gaussian'}
+    run_kwargs = {'parameters':[params], 'likelihood':likelihood, 'niterations':150000, 'nchains':3, 'start':starts, 'start_random':False, 'save_history':True, 'adapt_gamma':False, 'gamma_levels':1, 'tempering':False, 'history_file':'ndim_gaussian_seed.npy', 'multitry':5, 'parallel':False, 'model_name':'ndim_gaussian'}
 
     
     
