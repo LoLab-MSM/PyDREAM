@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Oct  1 17:21:29 2014
-
-A Python version of MT-DREAM(ZS) that will run without PyMC.
-
-@author: Erin
-"""
 
 import numpy as np
 import random
@@ -17,13 +10,13 @@ import multiprocess.pool as mp_pool
 import time
 
 class Dream():
-    """An implementation of the MT-DREAM(ZS) algorithm introduced in:
-        Laloy, E. & Vrugt, J. A. High-dimensional posterior exploration of hydrologic models using multiple-try DREAM (ZS) and high-performance computing. Water Resources Research 48, W01526 (2012).
+    """An implementation of the MT-DREAM\ :sub:`(ZS)`\  algorithm introduced in:
+        Laloy, E. & Vrugt, J. A. High-dimensional posterior exploration of hydrologic models using multiple-try DREAM\ :sub:`(ZS)`\  and high-performance computing. Water Resources Research 48, W01526 (2012).
     
     Parameters
     ----------
-    variables : PyMC variables
-        Model parameters to be sampled.  
+    variables : iterable of instance(s) of SampledParam class
+        Model parameters to be sampled with specified prior.
     nseedchains : int
         Number of draws with which to initialize the DREAM history.  Default = 10 * n dimensions
     nCR : int

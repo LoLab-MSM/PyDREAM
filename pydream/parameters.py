@@ -1,29 +1,19 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Jan 13 13:27:34 2016
-
-@author: Erin
-"""
 
 import numpy as np
 
 class SampledParam():
     """A SciPy-based parameter prior class.
+
     Parameters
     ----------
-        scipy_distribution:
-            A SciPy statistical distribution (i.e. scipy.stats.norm)
-        *args:
-            Arguments for the SciPy distribution
-        **kwargs:
-            keyword arguments for the SciPy distribution
+    scipy_distribution: SciPy continuous random variable class
+        A SciPy statistical distribution (i.e. scipy.stats.norm)
+    args:
+        Arguments for the SciPy distribution
+    kwargs:
+        keyword arguments for the SciPy distribution
 
-    Attributes
-    ----------
-        dist:
-            The SciPy distribution underlying the parameter
-        dsize:
-            The dimension of the parameter
         """
     def __init__(self, scipy_distribution, *args, **kwargs):
         self.dist = scipy_distribution(*args, **kwargs)
@@ -39,25 +29,24 @@ class SampledParam():
 
     def prior(self, q0):
         """Return the prior log probability given a point.
+
         Parameters
         ----------
-            q0:
-                A location in parameter space.
-            """
+        q0: array
+            A location in parameter space.
+        """
         logp = np.sum(self.dist.logpdf(q0))
 
         return logp
     
 class FlatParam(SampledParam):
     """A Flat parameter class (returns 0 at all locations).
+
     Parameters
     ----------
-    test_value:
-        A representative value for the parameter.  Used the infer parameter dimension, which is needed in the DREAM algorithm.
-    Attributes
-    ----------
-    dsize:
-        The dimension of the parameter.
+    test_value: array
+        Representative value for the parameter.  Used to infer the parameter dimension, which is needed in the DREAM algorithm.
+
     """
 
     def __init__(self, test_value):

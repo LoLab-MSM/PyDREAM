@@ -16,15 +16,8 @@ install:
   - pip install .
   - pip install https://github.com/LoLab-VU/pysb/archive/master.zip
   - pip install -r requirements.txt
-  #Install these to enable plotting in examples
-  - pip install seaborn
-  - pip install matplotlib
 # command to run tests
 script:
   - nosetests
-#command to run examples
-  - python pydream/examples/corm/example_sample_corm_with_dream.py
-  - python pydream/examples/mixturemodel/mixturemodel.py
-  - python pydream/examples/ndim_gaussian/dream_ex_ndim_gaussian.py
-  - python pydream/examples/robertson/example_sample_robertson_with_dream.py
+
 

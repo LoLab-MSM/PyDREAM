@@ -5,7 +5,7 @@ def readme():
         return f.read()
 
 setup(name='pydream',
-      version='0.1',
+      version='1.0',
       description='A Python implementation of the MT-DREAM(ZS) algorithm from Laloy and Vrugt 2012.',
       long_description=readme(),
       classifiers=['Programming Language :: Python :: 2'],

@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Jan 12 14:15:49 2016
-
-@author: Erin
-
-"""
 
 import numpy as np
 import multiprocess as mp
@@ -15,26 +9,34 @@ import traceback
 
 def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, restart=False, verbose=True, tempering=False, **kwargs):
     """Run DREAM given a set of parameters with priors and a likelihood function.
+
     Parameters
     ----------
-        parameters:
-            A list of parameter priors
-        likelihood:
-            A user-defined likelihood function
-        nchains:
-            The number of parallel DREAM chains to run.  Default = 5
-        niterations:
-            The number of algorithm iterations to run. Default = 50,000
-        start:
-            Either a list of start locations to initialize chains in, or a single start location to initialize all chains in. Default: None
-        restart:
-            Whether run is a continuation of an earlier run.  Pass this with the model_name argument to automatically load previous history and crossover probability files.  Default: False
-        verbose:
-            Whether to print verbose output (including acceptance or rejection of moves and the current acceptance rate).  Default: True
-        tempering:
-            Whether to use parallel tempering for the DREAM chains.  Warning: this feature is untested.  Use at your own risk! Default: False
-        **kwargs:
-            Other arguments that will be passed to the Dream class on initialization.  For more information, see Dream class.
+    parameters: iterable of SampledParam class
+        A list of parameter priors
+    likelihood: function
+        A user-defined likelihood function
+    nchains: int, optional
+        The number of parallel DREAM chains to run.  Default = 5
+    niterations: int, optional
+        The number of algorithm iterations to run. Default = 50,000
+    start: iterable of arrays or single array, optional
+        Either a list of start locations to initialize chains in, or a single start location to initialize all chains in. Default: None
+    restart: Boolean, optional
+        Whether run is a continuation of an earlier run.  Pass this with the model_name argument to automatically load previous history and crossover probability files.  Default: False
+    verbose: Boolean, optional
+        Whether to print verbose output (including acceptance or rejection of moves and the current acceptance rate).  Default: True
+    tempering: Boolean, optional
+        Whether to use parallel tempering for the DREAM chains.  Warning: this feature is untested.  Use at your own risk! Default: False
+    kwargs:
+        Other arguments that will be passed to the Dream class on initialization.  For more information, see Dream class.
+
+    Returns
+    -------
+    sampled_params : list of arrays
+        Sampled parameters for each chain
+    log_ps : list of arrays
+        Log probability for each sampled point for each chain
         """
 
     if restart:
