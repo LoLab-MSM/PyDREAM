@@ -16,6 +16,9 @@ install:
   - pip install .
   - pip install https://github.com/LoLab-VU/pysb/archive/master.zip
   - pip install -r requirements.txt
+  #Install these to enable plotting in examples
+  - pip install seaborn
+  - pip install matplotlib
 # command to run tests
 script:
   nosetests
