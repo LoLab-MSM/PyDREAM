@@ -23,6 +23,9 @@ from pydream.examples.ndim_gaussian.dream_ex_ndim_gaussian import run_kwargs as 
 from pydream.examples.ndim_gaussian.dream_ex_ndim_gaussian import likelihood as ndimgauss_like
 from pydream.examples.robertson.example_sample_robertson_with_dream import run_kwargs as robertson_kwargs
 from pydream.examples.robertson.example_sample_robertson_with_dream import likelihood as robertson_like
+from pydream.examples.robertson_nopysb.example_sample_robertson_nopysb_with_dream import run_kwargs as rob_nop_kwargs
+from pydream.examples.robertson_nopysb.example_sample_robertson_nopysb_with_dream import likelihood as rob_nop_like
+
 import numbers
 
 class Test_Dream_Initialization(unittest.TestCase):
@@ -738,6 +741,25 @@ class Test_DREAM_examples(unittest.TestCase):
         self.assertEqual(len(sampled_params[0]), 100)
         self.assertEqual(len(sampled_params[0][0]), 3)
         self.assertEqual(len(logps), nchains)
+        self.assertEqual(len(logps[0]), 100)
+        self.assertEqual(len(logps[0][0]), 1)
+
+    def test_robertson_nopysb_example(self):
+        """Test that the Robertson example without PySB runs and returns values of the expected shape."""
+
+        nchains = rob_nop_kwargs['nchains']
+        rob_nop_kwargs['niterations'] = 100
+        rob_nop_kwargs['verbose'] = False
+        rob_nop_kwargs['save_history'] = False
+
+        #Check likelihood fxn runs
+        logp = rob_nop_like([3, 8, .11])
+
+        #Check sampling runs and gives output of expected shape
+        sampled_params, logps = run_dream(**rob_nop_kwargs)
+        self.assertEqual(len(sampled_params), nchains)
+        self.assertEqual(len(sampled_params[0]), 100)
+        self.assertEqual(len(sampled_params[0][0]), 3)
         self.assertEqual(len(logps[0]), 100)
         self.assertEqual(len(logps[0][0]), 1)
 
