@@ -57,6 +57,7 @@ class Dream():
     
     def __init__(self, model, variables=None, nseedchains=None, nCR=3, adapt_crossover=True, adapt_gamma=False, crossover_burnin=None, DEpairs=1, lamb=.05, zeta=1e-12, history_thin=10, snooker=.10, p_gamma_unity=.20, gamma_levels=1, start_random=True, save_history=True, history_file=False, crossover_file=False, gamma_file=False, multitry=False, parallel=False, verbose=False, model_name=False, **kwargs):
 
+        #Set model and variable attributes (if no variables passed, set to all parameters)
         self.model = model
         self.model_name = model_name
         if variables is None:
@@ -73,6 +74,7 @@ class Dream():
                 if var.dist.dist.name == 'uniform':
                     self.boundaries = True
 
+        #Set min and max values for boundaries
         if self.boundaries:
             self.boundary_mask = np.zeros((self.total_var_dimension), dtype=bool)
             self.mins = []
@@ -97,6 +99,7 @@ class Dream():
             self.nCR = self.total_var_dimension
             print('Warning: the total number of crossover values specified ('+str(nCR)+') is less than the total dimension of all variables ('+str(self.total_var_dimension)+').  Setting the number of crossover values to be equal to the total variable dimension.')
 
+        #If there is only one variable dimension, don't adapt crossover values
         if self.total_var_dimension == 1 and adapt_crossover:
             adapt_crossover = False
             print('Warning: the total variable dimension = 1, so crossover values will not be adapted, even though crossover adaptation was requested.')
@@ -105,6 +108,8 @@ class Dream():
         self.njoint_cr_gamma_probs = nCR*gamma_levels
         self.crossover_burnin = crossover_burnin
         self.crossover_file = crossover_file
+
+        #Load crossover values from file if given, else set to 1/nCR for all and adapt if requested
         if crossover_file:
             self.CR_probabilities = np.load(crossover_file)
             self.nCR = len(self.CR_probabilities)
@@ -116,6 +121,7 @@ class Dream():
             self.CR_probabilities = [1/float(self.nCR) for i in range(self.nCR)]
             self.adapt_crossover = adapt_crossover
 
+        #Load gamma values from file if given, otherwise set to 1/ngamma for all
         if gamma_file:
             self.gamma_probabilities = np.load(gamma_file)
             if adapt_gamma:
@@ -125,25 +131,34 @@ class Dream():
             self.gamma_probabilities = [1/float(self.ngamma) for i in range(self.ngamma)]
             self.adapt_gamma = adapt_gamma
 
-
+        #Set crossover values and gamma (the proportion of dimensions to crossover/gamma level to choose)
         self.CR_values = np.array([m/float(self.nCR) for m in range(1, self.nCR+1)])  
         self.gamma_level_values = np.array([m for m in range(1, self.ngamma+1)])
+
+        #Set number of pairs to use for determining distance between points for proposals
         self.DEpairs = np.linspace(1, DEpairs, num=DEpairs) #This is delta in original Matlab code
+
         self.snooker = snooker
-        self.p_gamma_unity = p_gamma_unity 
+        self.p_gamma_unity = p_gamma_unity
+
+        #If no multitry requested, set value to 1, if requested without a value, set to 5, else set to the value passed
         if multitry == False:
             self.multitry = 1
         elif multitry == True:
             self.multitry = 5
         else:
             self.multitry = multitry
+
         self.parallel = parallel
         self.lamb = lamb #This is e sub d in DREAM papers
         self.zeta = zeta #This is epsilon in DREAM papers
         self.last_logp = None
 
+        #Set the number of seedchains to 10*dimensions to fit
         if self.nseedchains == None:
             self.nseedchains = self.total_var_dimension*10
+
+        #Set array of gamma values (decreasing step size with increasing level)
         gamma_array = np.zeros((self.ngamma, DEpairs, self.total_var_dimension))
         gamma_level_decrease = 1
         for gamma_level in range(1, self.ngamma+1):         
@@ -152,6 +167,7 @@ class Dream():
             gamma_level_decrease = gamma_level_decrease*2
         self.gamma_arr = gamma_array
         self.gamma = None
+
         self.iter = 0  
         self.chain_n = None
         self.nchains = None
@@ -197,6 +213,7 @@ class Dream():
                         q0 = self.draw_from_prior(self.variables)
                     if self.verbose:
                         print('Start: ',q0)
+
                 # Also get length of history array so we know when to save it at end of run.
                 if self.save_history:
                     with Dream_shared_vars.history.get_lock():
@@ -390,7 +407,16 @@ class Dream():
         return q_new, self.last_prior, self.last_like
         
     def set_current_position_arr(self, ndimensions, q_new):
-        """Add current position of chain to shared array available to other chains."""
+        """Add current position of chain to shared array available to other chains.
+
+        Parameters
+        ----------
+        ndimensions : int
+            number of dimensions in a draw
+
+        q_new : numpy array
+            accepted point in parameter space
+        """
         
         if self.nchains == None:
             current_positions = np.frombuffer(Dream_shared_vars.current_positions.get_obj())
@@ -408,7 +434,18 @@ class Dream():
             Dream_shared_vars.current_positions[start_cp:end_cp] = np.array(q_new).flatten()        
         
     def estimate_crossover_probabilities(self, ndim, q0, q_new, CR):
-        """Adapt crossover probabilities during crossover burn-in period."""
+        """Adapt crossover probabilities during crossover burn-in period.
+
+        Parameters
+        ----------
+        ndim : int
+            number of dimensions in a draw
+        q0 : numpy array
+            original point in parameter space
+        q_new : numpy array
+            new point in parameter space
+        CR : float
+            selected crossover probability for this step"""
 
         cross_probs = Dream_shared_vars.cross_probs[0:self.nCR]
         
@@ -447,6 +484,19 @@ class Dream():
         return cross_probs
     
     def estimate_gamma_level_probs(self, ndim, q0, q_new, gamma_level):
+        """Adapt gamma level probabilities during burn-in
+
+        Parameters
+        ----------
+        ndim : int
+            number of dimensions in a draw
+        q0 : numpy array
+            original point in parameter space
+        q_new : numpy array
+            new point in parameter space
+        gamma_level : int
+            gamma level selected for this step"""
+
         current_positions = np.frombuffer(Dream_shared_vars.current_positions.get_obj())
 
         current_positions = current_positions.reshape((self.nchains, ndim))
@@ -489,7 +539,14 @@ class Dream():
         return run_snooker
     
     def set_CR(self, CR_probs, CR_vals):
-        """Select crossover value for a given iteration."""
+        """Select crossover value for a given iteration.
+
+        Parameters
+        ----------
+        CR_probs : numpy array
+            current probabilities of selecting given crossover values
+        CR_values : numpy array
+            possible crossover values"""
         CR_loc = np.where(np.random.multinomial(1, CR_probs)==1)
 
         CR = CR_vals[CR_loc]
@@ -497,7 +554,13 @@ class Dream():
         return CR
     
     def set_DEpair(self, DEpairs):
-        """Select the number of pairs of chains to be used for creating the next proposal point for a given iteration."""
+        """Select the number of pairs of chains to be used for creating the next proposal point for a given iteration.
+
+        Parameters
+        ----------
+        DEpairs : numpy array
+            possible values for the number of chain pairs to be used for proposing the next point"""
+
         if len(DEpairs)>1:
             DEpair_choice = np.squeeze(np.random.randint(1, len(DEpairs)+1, size=1))
         else:
@@ -505,6 +568,15 @@ class Dream():
         return DEpair_choice
     
     def set_gamma_level(self, gamma_level_probs, gamma_level_vals):
+        """Set gamma level value given current probabilities and possible values.
+
+        Parameters
+        ----------
+        gamma_level_probs : numpy array
+            current probabilities of selecting possible gamma levels
+        gamma_level_vals : numpy array
+            possible values of gamma level"""
+
         gamma_loc = np.where(np.random.multinomial(1, gamma_level_probs)==1)
         
         gamma_level = np.squeeze(gamma_level_vals[gamma_loc])
@@ -512,7 +584,18 @@ class Dream():
         return gamma_level
     
     def set_gamma(self, DEpairs, snooker_choice, gamma_level_choice, d_prime):
-        """Select gamma value for a given iteration."""
+        """Select gamma value for a given iteration.
+
+        Parameters
+        ----------
+        DEpairs : int
+            selected number of chain pairs to be used for proposing the next point
+        snooker_choice : bool
+            whether to use a snooker update scheme on this iteration
+        gamma_level_choice : int
+            selected level of gamma values to be used this iteration
+        d_prime : int
+            number of parameter dimensions to be updated on this step."""
         
         gamma_unity_choice = np.where(np.random.multinomial(1, [self.p_gamma_unity, 1-self.p_gamma_unity])==1)
         
@@ -528,7 +611,13 @@ class Dream():
         return gamma
 
     def draw_from_prior(self, model_vars):
-        """Draw from a parameter's prior to seed history array."""
+        """Draw from a parameter's prior to seed history array.
+
+        Parameters
+        ----------
+        model_vars : iterable of instance(s) of SampledParam class
+            Model parameters to be sampled with their previously specified prior
+        """
         
         draw = np.array([])
         for variable in model_vars:
@@ -540,7 +629,20 @@ class Dream():
         return draw.flatten()
 
     def sample_from_history(self, nseedchains, DEpairs, ndimensions, snooker=False):
-        """Draw random point from the history array."""
+        """Draw random point from the history array.
+
+        Parameters
+        ----------
+        nseedchains : int
+            number of points with which the history was initially seeded
+        DEpairs : int
+            number of pairs of chains to be used for proposing the next point
+        ndimensions : int
+            number of dimensions in a draw
+        snooker : bool
+            whether to use a snooker update at this iteration. Default = False
+        """
+
         if not snooker:
             chain_num = random.sample(range(Dream_shared_vars.count.value+nseedchains), DEpairs*2)
         else:
@@ -551,7 +653,22 @@ class Dream():
         return sampled_chains
         
     def generate_proposal_points(self, n_proposed_pts, q0, CR, DEpairs, gamma_level, snooker):
-        """Generate proposal points."""
+        """Generate proposal points.
+
+        Parameters
+        ----------
+        n_proposed_pts : int
+            Number of points to propose this iteration (greater than one if using multi-try update scheme)
+        q0 : numpy array
+            Original point in parameter space
+        CR : float
+            Crossover value selected for this iteration
+        DEpairs : int
+            Number of chain pairs to use for proposing the next point for this iteration
+        gamma_level : int
+            Level of gamma values to use for this iteration
+        snooker : bool
+            Whether to use a snooker update on this iteration."""
 
         if not snooker:
             
@@ -638,7 +755,14 @@ class Dream():
             return proposed_pts, snooker_logp, z
         
     def snooker_update(self, n_proposed_pts, q0):
-        """Generate a proposed point with snooker updating scheme."""
+        """Generate a proposed point with snooker updating scheme.
+
+        Parameters
+        ----------
+        n_proposed_pts : int
+            Number of points to propose this iteration (greater than one if using multi-try update scheme)
+        q0 : numpy array
+            Original point in parameter space"""
         
         sampled_history_pt = [self.sample_from_history(self.nseedchains, self.DEpairs, self.total_var_dimension, snooker=True) for i in range(n_proposed_pts)]
 
@@ -672,7 +796,21 @@ class Dream():
         return proposed_pts, snooker_logp, sampled_history_pt
     
     def mt_evaluate_logps(self, parallel, multitry, proposed_pts, pfunc, ref=False):
-        """Evaluate the log probability for multiple points in serial or parallel when using multi-try."""
+        """Evaluate the log probability for multiple points in serial or parallel when using multi-try.
+
+        Parameters
+        ----------
+        parallel : bool
+            Whether to evaluate multi-try points in parallel
+        multitry : int
+            Number of multi-try points
+        proposed_pts : numpy 2D array nmulti-try x nparameterdims
+            Proposed points
+        pfunc : function
+            Function that takes a point in parameter space and
+            returns the log of the prior value and the log of the likelihood at that point
+        ref : bool
+            Whether this is a multi-try reference draw. Default = False"""
         
         #If using multi-try and running in parallel farm out proposed points to process pool.
         if parallel:
@@ -704,7 +842,18 @@ class Dream():
         return log_priors, log_likes
 
     def mt_choose_proposal_pt(self, log_priors, log_likes, proposed_pts, T):
-        """Select a proposed point with probability proportional to the probability density at that point."""
+        """Select a proposed point with probability proportional to the probability density at that point.
+
+        Parameters
+        ----------
+        log_priors : numpy array
+            Values of the log prior probability for all proposed multi-try points
+        log_likes : numpy array
+            Values of the log likelihood probability for all proposed multi-try points
+        proposed_pts : numpy 2D array nmulti-tries x nparameterdims
+            Proposed points
+        T : float
+            Temperature (only used if using parallel tempering)"""
         
         #Substract largest logp from all logps (this from original Matlab code)
         org_log_likes = log_likes
@@ -729,7 +878,19 @@ class Dream():
         return q_proposal, q_logp, noT_logp, noT_loglike, q_prior
         
     def record_history(self, nseedchains, ndimensions, q_new, len_history):
-        """Record accepted point in history."""
+        """Record accepted point in history.
+
+        Parameters
+        ----------
+        nseedchains : int
+            Number of points in parameter space with which the original history was seeded
+        ndimensions : int
+            Number of parameter dimensions being sampled
+        q_new : numpy array
+            Accepted point
+        len_history : int
+            The total dimension of the history when completely filled"""
+
         nhistoryrecs = Dream_shared_vars.count.value+nseedchains
         start_loc = int(nhistoryrecs*ndimensions)
         end_loc = int(start_loc+ndimensions)
@@ -745,7 +906,14 @@ class Dream():
             self.save_history_to_disc(np.frombuffer(Dream_shared_vars.history.get_obj()), prefix)
             
     def save_history_to_disc(self, history, prefix):
-        """Save history and crossover probabilities to files at end of run."""
+        """Save history and crossover probabilities to files at end of run.
+
+        Parameters
+        ----------
+        history : numpy array
+            History array
+        prefix : str
+            Prefix to add to history filename when saving"""
         
         filename = prefix+'DREAM_chain_history.npy'
         print('Saving history to file: ',filename)
@@ -771,7 +939,16 @@ def call_logp(args):
     return logp_fxn(tested_point)
     
 def metrop_select(mr, q, q0):
-    # Perform rejection/acceptance step for Metropolis class samplers
+    """Perform Metropolis rejection/acceptance
+
+    Parameters
+    ----------
+    mr : float
+        Metropolis ratio
+    q : numpy array
+        Proposed point
+    q0 : numpy array
+        Original point"""
 
     # Compare acceptance ratio to uniform random number
     if np.isfinite(mr) and np.log(np.random.uniform()) < mr:
