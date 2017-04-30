@@ -79,7 +79,7 @@ parameters_to_sample = SampledParam(uniform, loc=lower_limits, scale=6)
 
 sampled_parameter_names = [parameters_to_sample]
 
-niterations = 10000
+niterations = 10
 converged = False
 total_iterations = niterations
 nchains = 5
@@ -87,7 +87,9 @@ nchains = 5
 if __name__ == '__main__':
 
     #Run DREAM sampling.  Documentation of DREAM options is in Dream.py.
-    sampled_params, log_ps = run_dream(sampled_parameter_names, likelihood, niterations=niterations, nchains=nchains, multitry=False, gamma_levels=4, adapt_gamma=True, history_thin=1, model_name='robertson_dreamzs_5chain', verbose=True)
+    sampled_params, log_ps = run_dream(sampled_parameter_names, likelihood, niterations=niterations, nchains=nchains,
+                                       multitry=False, gamma_levels=4, adapt_gamma=True, history_thin=1,
+                                       model_name='robertson_dreamzs_5chain', verbose=True)
     
     #Save sampling output (sampled parameter values and their corresponding logps).
     for chain in range(len(sampled_params)):
