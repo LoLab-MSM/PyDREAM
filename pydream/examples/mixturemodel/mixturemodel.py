@@ -50,7 +50,7 @@ def likelihood(params):
 params = FlatParam(test_value=mean)
  
 starts = [m[chain] for chain in range(3)]
-print starts
+print(starts)
 
 
 if __name__ == '__main__':

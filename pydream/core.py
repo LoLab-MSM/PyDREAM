@@ -2,9 +2,9 @@
 
 import numpy as np
 import multiprocess as mp
-import Dream_shared_vars
-from Dream import Dream, DreamPool
-from model import Model
+from . import Dream_shared_vars
+from .Dream import Dream, DreamPool
+from .model import Model
 import traceback
 
 def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, restart=False, verbose=True, tempering=False, **kwargs):
@@ -65,10 +65,10 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
     else:
     
         if type(start) is list:
-            args = zip([step_instance]*nchains, [niterations]*nchains, start, [verbose]*nchains)
-            print args
+            args = list(zip([step_instance]*nchains, [niterations]*nchains, start, [verbose]*nchains))
+            print(args)
         else:
-            args = zip([step_instance]*nchains, [niterations]*nchains, [start]*nchains, [verbose]*nchains)
+            args = list(zip([step_instance]*nchains, [niterations]*nchains, [start]*nchains, [verbose]*nchains))
 
         returned_vals = pool.map(_sample_dream, args)
         sampled_params = [val[0] for val in returned_vals]
@@ -127,9 +127,9 @@ def _sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose):
     step_instances = [step_instance]*nchains   
     
     if type(start) is list:
-        args = zip(step_instances, start, T, [None]*nchains, [None]*nchains)
+        args = list(zip(step_instances, start, T, [None]*nchains, [None]*nchains))
     else:
-        args = zip(step_instances, [start]*nchains, T, [None]*nchains, [None]*nchains)  
+        args = list(zip(step_instances, [start]*nchains, T, [None]*nchains, [None]*nchains))
         
     sampled_params = np.zeros((nchains, niterations*2, step_instance.total_var_dimension))
     log_ps = np.zeros((nchains, niterations*2, 1))
@@ -218,7 +218,7 @@ def _sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose):
                 #On first iteration without starting points this will fail because q0 == None
                 pass
             
-        args = zip(dream_instances, qnews, T, loglikenews, logprinews)
+        args = list(zip(dream_instances, qnews, T, loglikenews, logprinews))
         q0 = qnews
     
     return sampled_params, log_ps
@@ -278,7 +278,7 @@ def _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=None):
     current_position_arr = mp.Array('d', [0]*current_position_dim)
     shared_nchains = mp.Value('i', nchains)
     n = mp.Value('i', 0)
-    tf = mp.Value('c', 'F')
+    tf = mp.Value('c', b'F')
     
     if step_instance.crossover_burnin == None:
         step_instance.crossover_burnin = int(np.floor(niterations/10))

@@ -101,21 +101,21 @@ Rule('kcat_AG_3',
 bind(COX2(cat=None), 'allo', AA(), 'b', [kf_AA_allo1, kr_AA_allo1])
 
 Rule('bind_COX2AA_AA_allo',
-     COX2(cat=1, allo=None) % AA(b=1) + AA(b=None) <> COX2(cat=1, allo=2) % AA(b=1) % AA(b=2),
+     COX2(cat=1, allo=None) % AA(b=1) + AA(b=None) != COX2(cat=1, allo=2) % AA(b=1) % AA(b=2),
     kf_AA_allo2, kr_AA_allo2)
 
 Rule('bind_COX2AG_AA_allo',
-     COX2(cat=1, allo=None) % AG(b=1) + AA(b=None) <> COX2(cat=1, allo=2) % AG(b=1) % AA(b=2),
+     COX2(cat=1, allo=None) % AG(b=1) + AA(b=None) != COX2(cat=1, allo=2) % AG(b=1) % AA(b=2),
     kf_AA_allo3, kr_AA_allo3)
 
 bind(COX2(cat=None), 'allo', AG(), 'b', [kf_AG_allo1, kr_AG_allo1])
 
 Rule('bind_COX2AA_AG_allo',
-     COX2(cat=1, allo=None) % AA(b=1) + AG(b=None) <> COX2(cat=1, allo=2) % AA(b=1) % AG(b=2),
+     COX2(cat=1, allo=None) % AA(b=1) + AG(b=None) != COX2(cat=1, allo=2) % AA(b=1) % AG(b=2),
     kf_AG_allo2, kr_AG_allo2)
 
 Rule('bind_COX2AG_AG_allo',
-     COX2(cat=1, allo=None) % AG(b=1) + AG(b=None) <> COX2(cat=1, allo=2) % AG(b=1) % AG(b=2),
+     COX2(cat=1, allo=None) % AG(b=1) + AG(b=None) != COX2(cat=1, allo=2) % AG(b=1) % AG(b=2),
     kf_AG_allo3, kr_AG_allo3)
 
 Observable('obsPG', PG())

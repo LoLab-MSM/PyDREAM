@@ -3,7 +3,7 @@ import numpy as np
 def Gelman_Rubin(sampled_parameters):
     nsamples = len(sampled_parameters[0])
     nchains = len(sampled_parameters)
-    nburnin = nsamples/2
+    nburnin = nsamples//2
 
     chain_var = [np.var(sampled_parameters[chain][nburnin:,:], axis=0) for chain in range(nchains)]
 
@@ -18,3 +18,4 @@ def Gelman_Rubin(sampled_parameters):
     Rhat = np.sqrt(np.divide(var_est, W))
 
     return Rhat
+

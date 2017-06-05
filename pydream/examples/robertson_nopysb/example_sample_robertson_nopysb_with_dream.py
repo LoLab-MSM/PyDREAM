@@ -125,7 +125,7 @@ if __name__ == '__main__':
     # Check convergence and continue sampling if not converged
 
     GR = Gelman_Rubin(sampled_params)
-    print 'At iteration: ', total_iterations, ' GR = ', GR
+    print('At iteration: ', total_iterations, ' GR = ', GR)
     np.savetxt('robertson_nopysb_dreamzs_5chain_GelmanRubin_iteration_' + str(total_iterations) + '.txt', GR)
 
     old_samples = sampled_params
@@ -146,7 +146,7 @@ if __name__ == '__main__':
 
             old_samples = [np.concatenate((old_samples[chain], sampled_params[chain])) for chain in range(nchains)]
             GR = Gelman_Rubin(old_samples)
-            print 'At iteration: ', total_iterations, ' GR = ', GR
+            print('At iteration: ', total_iterations, ' GR = ', GR)
             np.savetxt('robertson_nopysb_dreamzs_5chain_GelmanRubin_iteration_' + str(total_iterations)+'.txt', GR)
 
             if np.all(GR < 1.2):
