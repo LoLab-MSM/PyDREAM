@@ -106,7 +106,7 @@ if __name__ == '__main__':
         while not converged:
             total_iterations += niterations
 
-            sampled_params, log_ps = run_dream(sampled_parameter_names, likelihood, niterations=niterations,
+            sampled_params, log_ps = run_dream(sampled_parameter_names, likelihood, start=starts, niterations=niterations,
                                                nchains=nchains, multitry=False, gamma_levels=4, adapt_gamma=True,
                                                history_thin=1, model_name='robertson_dreamzs_5chain', verbose=True, restart=True)
 
