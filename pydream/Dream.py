@@ -858,23 +858,15 @@ class Dream():
         #Substract largest logp from all logps (this from original Matlab code)
         org_log_likes = log_likes
         log_likes = T * log_likes
-        print('log likes: ',log_likes)
-        print('log priors: ',log_priors)
         log_ps = log_priors + log_likes
-        print('logps: ',log_ps)
         noT_logps = org_log_likes + log_priors
         max_logp = np.amax(log_ps)
-        print('max logp: ',max_logp)
         log_ps_sub = np.exp(log_ps - max_logp)
-        print('log ps sub: ',log_ps_sub)
 
         #Calculate probabilities
         sum_proposal_logps = np.sum(log_ps_sub)
-        print('sum proposal logps: ',sum_proposal_logps)
         logp_prob = log_ps_sub/sum_proposal_logps
-        print('logp prob: ',logp_prob)
         best_logp_loc = np.squeeze(np.where(np.random.multinomial(1, logp_prob)==1)[0])
-        print('best logp loc: ',best_logp_loc)
 
         #Randomly select one of the tested points with probability proportional to the probability density at the point
         q_proposal = np.squeeze(proposed_pts[best_logp_loc])

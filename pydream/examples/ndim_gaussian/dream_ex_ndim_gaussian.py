@@ -6,7 +6,7 @@ Created on Wed Apr  8 18:01:34 2015
 """
 
 # An implementation of example 2 from MT-DREAM(ZS) original Matlab code. (see Laloy and Vrugt 2012)
-# 100 dimensional Gaussian distribution
+# 200 dimensional Gaussian distribution
 
 import numpy as np
 import os
