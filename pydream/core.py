@@ -66,7 +66,6 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
     
         if type(start) is list:
             args = zip([step_instance]*nchains, [niterations]*nchains, start, [verbose]*nchains)
-            print args
         else:
             args = zip([step_instance]*nchains, [niterations]*nchains, [start]*nchains, [verbose]*nchains)
 

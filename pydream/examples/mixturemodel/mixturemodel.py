@@ -13,7 +13,7 @@ import os
 import scipy.linalg
 from pydream.parameters import FlatParam
 from pydream.core import run_dream
-from pydream.convergence import Gelman_Rubin
+from pydream.convergence import  Gelman_Rubin
 
 log_F = np.array([-10.2880, -9.5949])
 
@@ -50,8 +50,6 @@ def likelihood(params):
 params = FlatParam(test_value=mean)
  
 starts = [m[chain] for chain in range(3)]
-print starts
-
 
 if __name__ == '__main__':
 
@@ -61,15 +59,7 @@ if __name__ == '__main__':
     total_iterations = niterations
     nchains=3
 
-    sampled_params, log_ps = run_dream([params],
-                                       likelihood,
-                                       niterations=niterations,
-                                       nchains=nchains, start=starts,
-                                       start_random=False,
-                                       save_history=True,
-                                       history_file='mixturemodel_seed.npy',
-                                       multitry=5,
-                                       parallel=False)
+    sampled_params, log_ps = run_dream([params], likelihood, niterations=niterations, nchains=nchains, start=starts, start_random=False, save_history=True, history_file='mixturemodel_seed.npy', multitry=5, parallel=False)
     
     for chain in range(len(sampled_params)):
         np.save('mixmod_mtdreamzs_3chain_sampled_params_chain_'+str(chain)+'_'+str(total_iterations), sampled_params[chain])

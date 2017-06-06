@@ -54,3 +54,4 @@ class FlatParam(SampledParam):
         
     def prior(self, q0):
         return 0
+        
