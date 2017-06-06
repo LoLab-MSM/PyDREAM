@@ -2,7 +2,7 @@
 
 import numpy as np
 import random
-import Dream_shared_vars
+from . import Dream_shared_vars
 from datetime import datetime
 import traceback
 import multiprocess as mp
@@ -136,7 +136,7 @@ class Dream():
         self.gamma_level_values = np.array([m for m in range(1, self.ngamma+1)])
 
         #Set number of pairs to use for determining distance between points for proposals
-        self.DEpairs = np.linspace(1, DEpairs, num=DEpairs) #This is delta in original Matlab code
+        self.DEpairs = np.linspace(1, DEpairs, num=DEpairs, dtype=int) #This is delta in original Matlab code
 
         self.snooker = snooker
         self.p_gamma_unity = p_gamma_unity
@@ -420,7 +420,7 @@ class Dream():
         
         if self.nchains == None:
             current_positions = np.frombuffer(Dream_shared_vars.current_positions.get_obj())
-            self.nchains = len(current_positions)/ndimensions
+            self.nchains = len(current_positions)//ndimensions
         
         if self.chain_n == None:
             with Dream_shared_vars.nchains.get_lock():
@@ -644,9 +644,9 @@ class Dream():
         """
 
         if not snooker:
-            chain_num = random.sample(range(Dream_shared_vars.count.value+nseedchains), DEpairs*2)
+            chain_num = random.sample(range(int(Dream_shared_vars.count.value+nseedchains)), DEpairs*2)
         else:
-            chain_num = random.sample(range(Dream_shared_vars.count.value+nseedchains), 1)
+            chain_num = random.sample(range(int(Dream_shared_vars.count.value+nseedchains)), 1)
         start_locs = [int(i*ndimensions) for i in chain_num]
         end_locs = [int(i+ndimensions) for i in start_locs]
         sampled_chains = [Dream_shared_vars.history[start_loc:end_loc] for start_loc, end_loc in zip(start_locs, end_locs)]
@@ -815,7 +815,7 @@ class Dream():
         #If using multi-try and running in parallel farm out proposed points to process pool.
         if parallel:
             p = mp.Pool(multitry)
-            args = zip([self]*multitry, np.squeeze(proposed_pts))
+            args = list(zip([self]*multitry, np.squeeze(proposed_pts)))
             logps = p.map(call_logp, args)
             p.close()
             p.join()
@@ -976,4 +976,4 @@ class DreamPool(mp_pool.Pool):
     def __init__(self, processes=None, initializer=None, initargs=None, maxtasksperchild=None):
         mp_pool.Pool.__init__(self, processes, initializer, initargs, maxtasksperchild)
     Process = NoDaemonProcess
-        
+
