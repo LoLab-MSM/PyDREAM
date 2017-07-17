@@ -8,7 +8,7 @@ before_install:
 - conda update --yes conda
 - conda install --yes python="$TRAVIS_PYTHON_VERSION" numpy scipy nose
 #Install BioNetGen for PySB
-- wget "http://www.csb.pitt.edu/Faculty/Faeder/?smd_process_download=1&download_id=142"
+- wget "http://www.csb.pitt.edu/Faculty/Faeder/?smd_process_download=1&download_id=347"
     -O BioNetGen-2.2.6-stable.tar.gz
 - tar xzf BioNetGen-2.2.6-stable.tar.gz
 - export BNGPATH=`pwd`/BioNetGen-2.2.6-stable
