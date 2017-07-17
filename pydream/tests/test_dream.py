@@ -27,13 +27,15 @@ from pydream.examples.robertson_nopysb.example_sample_robertson_nopysb_with_drea
 from pydream.examples.robertson_nopysb.example_sample_robertson_nopysb_with_dream import likelihood as rob_nop_like
 
 import numbers
+import sys
 
 class Test_Dream_Initialization(unittest.TestCase):
     
     def test_fail_with_one_chain(self):
         """Test that DREAM fails if run with only one chain."""
-        self.param, self.like = onedmodel() 
-        self.assertRaisesRegexp(Exception, 'Dream should be run with at least ', run_dream, self.param, self.like, nchains=1)
+        self.param, self.like = onedmodel()
+        assertRaisesRegex = self.assertRaisesRegexp if sys.version_info[0] < 3 else self.assertRaisesRegex
+        assertRaisesRegex(Exception, 'Dream should be run with at least ', run_dream, self.param, self.like, nchains=1)
     
     def test_total_var_dimension_init(self):
         """Test that DREAM correctly identifies the total number of dimensions in all sampled parameters for a few test cases."""
@@ -202,7 +204,7 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
         self.param, self.like = multidmodel()
         model = Model(self.like, self.param)
         step = Dream(model=model)
-        history_arr = mp.Array('d', range(120))
+        history_arr = mp.Array('d', list(range(120)))
         n = mp.Value('i', 0)
         pydream.Dream_shared_vars.history = history_arr
         pydream.Dream_shared_vars.count = n
@@ -237,7 +239,7 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
         self.param, self.like = multidmodel()
         model = Model(self.like, self.param)
         step = Dream(model=model)
-        history_arr = mp.Array('d', range(120))
+        history_arr = mp.Array('d', list(range(120)))
         n = mp.Value('i', 0)
         pydream.Dream_shared_vars.history = history_arr
         pydream.Dream_shared_vars.count = n
@@ -272,7 +274,7 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
         self.param, self.like = multidmodel()
         model = Model(self.like, self.param)
         step = Dream(model=model)
-        history_arr = mp.Array('d', range(120))
+        history_arr = mp.Array('d', list(range(120)))
         n = mp.Value('i', 0)
         pydream.Dream_shared_vars.history = history_arr
         pydream.Dream_shared_vars.count = n
@@ -307,7 +309,7 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
         self.param, self.like = multidmodel()
         model = Model(self.like, self.param)
         step = Dream(model=model)
-        history_arr = mp.Array('d', range(120))
+        history_arr = mp.Array('d', list(range(120)))
         n = mp.Value('i', 0)
         pydream.Dream_shared_vars.history = history_arr
         pydream.Dream_shared_vars.count = n
@@ -388,7 +390,7 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
         self.assertGreater(new_cr_probs[2], starting_crossover[2])
         self.assertAlmostEqual(np.sum(new_cr_probs), 1.0, places=1)
         old_cr_probs = new_cr_probs
-        for i, q_new in zip(range(5), [np.array([15]), np.array([17]), np.array([19]), np.array([21]), np.array([23])]):
+        for i, q_new in zip(list(range(5)), [np.array([15]), np.array([17]), np.array([19]), np.array([21]), np.array([23])]):
             new_cr_probs = dream.estimate_crossover_probabilities(dream.total_var_dimension, q0, q_new, CR_vals[1])
         self.assertEqual(np.array_equal(new_cr_probs, old_cr_probs), False)
         
