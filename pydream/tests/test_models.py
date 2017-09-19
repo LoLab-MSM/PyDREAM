@@ -36,7 +36,7 @@ def multidmodel_uniform():
     """Multidimensional model with uniform priors."""
 
     lower = np.array([-5, -9, 5, 3])
-    upper = np.array([10, 0, 7, 8])
+    upper = np.array([10, 2, 7, 8])
     range = upper-lower
 
     x = SampledParam(uniform, loc=lower, scale=range)

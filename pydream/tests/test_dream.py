@@ -665,6 +665,37 @@ class Test_Dream_Full_Algorithm(unittest.TestCase):
         remove('test_history_correct_DREAM_chain_adapted_crossoverprob.npy')
         remove('test_history_correct_DREAM_chain_adapted_gammalevelprob.npy')
 
+    def test_boundaries_obeyed_aftersampling(self):
+        """Test that boundaries are respected if included."""
+
+        self.param, self.like = multidmodel_uniform()
+        model = Model(self.like, self.param)
+        step = Dream(model=model, save_history=True, history_thin=1, model_name='test_boundaries',
+                     adapt_crossover=False, hardboundaries=True)
+        sampled_params, logps = run_dream(self.param, self.like, niterations=1000, nchains=5, save_history=True,
+                                          history_thin=1, model_name='test_boundaries', adapt_crossover=False,
+                                          verbose=False, hardboundaries=True)
+        history = np.load('test_boundaries_DREAM_chain_history.npy')
+        variables = model.sampled_parameters
+        dim = 0
+        for var in variables:
+            interval = var.interval()
+            dim += var.dsize
+
+        lowerbound = interval[0]
+        upperbound = interval[1]
+
+        npoints = int(len(history)/float(dim))
+        reshaped_history = np.reshape(history, (npoints, dim))
+
+        self.assertFalse((reshaped_history<lowerbound).any())
+        self.assertFalse((reshaped_history>upperbound).any())
+
+        remove('test_boundaries_DREAM_chain_adapted_crossoverprob.npy')
+        remove('test_boundaries_DREAM_chain_adapted_gammalevelprob.npy')
+        remove('test_boundaries_DREAM_chain_history.npy')
+
+
 class Test_DREAM_examples(unittest.TestCase):
 
     def test_CORM_example(self):

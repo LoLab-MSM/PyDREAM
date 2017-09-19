@@ -53,9 +53,11 @@ class Dream():
         Whether to print verbose progress.  Default is false.
     model_name : str
         A model name to be used as a prefix when saving history and crossover value files.
+    hardboundaries : bool
+        Whether to impose hard boundaries on the search space (i.e., if using a uniform prior, do not search outside bounds of prior).
     """
     
-    def __init__(self, model, variables=None, nseedchains=None, nCR=3, adapt_crossover=True, adapt_gamma=False, crossover_burnin=None, DEpairs=1, lamb=.05, zeta=1e-12, history_thin=10, snooker=.10, p_gamma_unity=.20, gamma_levels=1, start_random=True, save_history=True, history_file=False, crossover_file=False, gamma_file=False, multitry=False, parallel=False, verbose=False, model_name=False, **kwargs):
+    def __init__(self, model, variables=None, nseedchains=None, nCR=3, adapt_crossover=True, adapt_gamma=False, crossover_burnin=None, DEpairs=1, lamb=.05, zeta=1e-12, history_thin=10, snooker=.10, p_gamma_unity=.20, gamma_levels=1, start_random=True, save_history=True, history_file=False, crossover_file=False, gamma_file=False, multitry=False, parallel=False, verbose=False, model_name=False, hardboundaries=False, **kwargs):
 
         #Set model and variable attributes (if no variables passed, set to all parameters)
         self.model = model
@@ -65,14 +67,14 @@ class Dream():
         else:
             self.variables = variables
 
-        #Calculate total variable dimension and set boundaries if using uniform priors.
-        self.boundaries = False
+        #Calculate total variable dimension and set boundaries
+        self.boundaries = hardboundaries
         self.total_var_dimension = 0
         for var in self.variables:
             self.total_var_dimension += var.dsize
-            if hasattr(var, 'dist'):
-                if var.dist.dist.name == 'uniform':
-                    self.boundaries = True
+            #if hasattr(var, 'dist'):
+            #    if var.dist.dist.name == 'uniform':
+            #        self.boundaries = True
 
         #Set min and max values for boundaries
         if self.boundaries:
@@ -81,11 +83,11 @@ class Dream():
             self.maxs = []
             n = 0
             for var in self.variables:
-                if var.dist.dist.name == 'uniform':
-                    self.boundary_mask[n:n + var.dsize] = True
-                    interval = var.interval()
-                    self.mins.append(interval[0])
-                    self.maxs.append(interval[1])
+                #if var.dist.dist.name == 'uniform':
+                self.boundary_mask[n:n + var.dsize] = True
+                interval = var.interval(1)
+                self.mins.append(interval[0])
+                self.maxs.append(interval[1])
                 n += var.dsize
 
             self.mins = np.concatenate([vals for vals in self.mins])
