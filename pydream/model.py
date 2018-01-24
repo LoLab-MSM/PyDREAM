@@ -15,14 +15,16 @@ class Model():
             self.sampled_parameters = [sampled_parameters]
         
     def total_logp(self, q0):
+
         prior_logp = 0
         var_start = 0
         for param in self.sampled_parameters:
             var_end = param.dsize + var_start
-            if param.dsize == 1:
-                prior_logp = param.prior(q0)
-            else:
+            try:
                 prior_logp += param.prior(q0[var_start:var_end])
+            except ValueError:
+                #raised if q0 is a single scalar
+                prior_logp += param.prior(q0)
             var_start += param.dsize
 
         loglike = self.likelihood(q0)

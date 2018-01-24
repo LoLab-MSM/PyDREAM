@@ -50,9 +50,8 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
 
     model = Model(likelihood=likelihood, sampled_parameters=parameters)
     
-    if restart:    
+    if restart:
         step_instance = Dream(model=model, variables=parameters, history_file=kwargs['model_name']+'_DREAM_chain_history.npy', crossover_file=kwargs['model_name']+'_DREAM_chain_adapted_crossoverprob.npy', gamma_file=kwargs['model_name']+'_DREAM_chain_adapted_gammalevelprob.npy', verbose=verbose, **kwargs)
-
     else:
         step_instance = Dream(model=model, variables=parameters, verbose=verbose, **kwargs)
 

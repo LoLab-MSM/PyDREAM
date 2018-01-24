@@ -456,7 +456,7 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
         self.param, self.like = onedmodel()
         model = Model(self.like, self.param)
         step = Dream(model=model)
-        old_history = np.array([[1], [3], [5], [7], [9], [11]]).flatten()
+        old_history = np.array([1, 3, 5, 7, 9, 11])
         step.save_history_to_disc(old_history, 'testing_history_load_')
         sampled_params, logps = run_dream(self.param, self.like, niterations=3, nchains=3, history_thin=1, history_file='testing_history_load_DREAM_chain_history.npy', save_history=True, model_name='test_history_loading', verbose=False)
         new_history = np.load('test_history_loading_DREAM_chain_history.npy')

@@ -54,10 +54,10 @@ class Dream():
     model_name : str
         A model name to be used as a prefix when saving history and crossover value files.
     hardboundaries : bool
-        Whether to impose hard boundaries on the search space (i.e., if using a uniform prior, do not search outside bounds of prior).
+        Whether to relect point back into bounds of hard prior (i.e., if using a uniform prior, reflect points outside of boundaries back in, so you don't waste time looking at points with logpdf = -inf).
     """
     
-    def __init__(self, model, variables=None, nseedchains=None, nCR=3, adapt_crossover=True, adapt_gamma=False, crossover_burnin=None, DEpairs=1, lamb=.05, zeta=1e-12, history_thin=10, snooker=.10, p_gamma_unity=.20, gamma_levels=1, start_random=True, save_history=True, history_file=False, crossover_file=False, gamma_file=False, multitry=False, parallel=False, verbose=False, model_name=False, hardboundaries=False, **kwargs):
+    def __init__(self, model, variables=None, nseedchains=None, nCR=3, adapt_crossover=True, adapt_gamma=False, crossover_burnin=None, DEpairs=1, lamb=.05, zeta=1e-12, history_thin=10, snooker=.10, p_gamma_unity=.20, gamma_levels=1, start_random=True, save_history=True, history_file=False, crossover_file=False, gamma_file=False, multitry=False, parallel=False, verbose=False, model_name=False, hardboundaries=True, **kwargs):
 
         #Set model and variable attributes (if no variables passed, set to all parameters)
         self.model = model
@@ -72,26 +72,28 @@ class Dream():
         self.total_var_dimension = 0
         for var in self.variables:
             self.total_var_dimension += var.dsize
-            #if hasattr(var, 'dist'):
-            #    if var.dist.dist.name == 'uniform':
-            #        self.boundaries = True
 
         #Set min and max values for boundaries
         if self.boundaries:
-            self.boundary_mask = np.zeros((self.total_var_dimension), dtype=bool)
+            if self.total_var_dimension == 1:
+                self.boundary_mask = True
+            else:
+                self.boundary_mask = np.ones((self.total_var_dimension), dtype=bool)
             self.mins = []
             self.maxs = []
             n = 0
             for var in self.variables:
-                #if var.dist.dist.name == 'uniform':
-                self.boundary_mask[n:n + var.dsize] = True
                 interval = var.interval(1)
-                self.mins.append(interval[0])
-                self.maxs.append(interval[1])
-                n += var.dsize
 
-            self.mins = np.concatenate([vals for vals in self.mins])
-            self.maxs = np.concatenate([vals for vals in self.maxs])
+                if var.dsize > 1:
+                    self.mins += list(interval[0])
+                    self.maxs += list(interval[1])
+                else:
+                    self.mins.append(interval[0])
+                    self.maxs.append(interval[1])
+                n += var.dsize
+            self.mins = np.array(self.mins)
+            self.maxs = np.array(self.maxs)
 
         self.nseedchains = nseedchains
         self.nCR = nCR
@@ -212,7 +214,9 @@ class Dream():
                     if self.start_random:
                         if self.verbose:
                             print('Setting start to random draw from prior.')
-                        q0 = self.draw_from_prior(self.variables)
+
+                        q0 = self.draw_from_prior(self.variables, random_seed=True)
+
                     if self.verbose:
                         print('Start: ',q0)
 
@@ -612,7 +616,7 @@ class Dream():
             
         return gamma
 
-    def draw_from_prior(self, model_vars):
+    def draw_from_prior(self, model_vars, random_seed=False):
         """Draw from a parameter's prior to seed history array.
 
         Parameters
@@ -624,7 +628,7 @@ class Dream():
         draw = np.array([])
         for variable in model_vars:
             try:
-                var_draw = variable.random()
+                var_draw = variable.random(reseed=random_seed)
             except AttributeError:
                 raise Exception('Random draw from distribution for variable %s not implemented yet.' % variable)
             draw = np.append(draw, var_draw)
@@ -719,37 +723,63 @@ class Dream():
 
         #If uniform priors were used, check that proposed points are within bounds and reflect if not.
         if self.boundaries:
-           if n_proposed_pts > 1:
-               for pt_num in range(n_proposed_pts):
-                   masked_point = proposed_pts[pt_num][self.boundary_mask]
-                   x_lower = masked_point < self.mins
-                   x_upper = masked_point > self.maxs
-                   masked_point[x_lower] = 2 * self.mins[x_lower] - masked_point[x_lower]
-                   masked_point[x_upper] = 2 * self.maxs[x_upper] - masked_point[x_upper]
+            if n_proposed_pts > 1:
+                for pt_num in range(n_proposed_pts):
+                    masked_point = proposed_pts[pt_num][self.boundary_mask]
+                    x_lower = masked_point < self.mins
+                    x_upper = masked_point > self.maxs
+                    if x_lower.any():
+                        masked_point[x_lower] = 2 * self.mins[x_lower] - masked_point[x_lower]
+                    if x_upper.any():
+                        masked_point[x_upper] = 2 * self.maxs[x_upper] - masked_point[x_upper]
                    
-                   #Occasionally reflection will result in points still outside of boundaries
-                   x_lower = masked_point < self.mins
-                   x_upper = masked_point > self.maxs
-                   masked_point[x_lower] = self.mins[x_lower] + np.random.rand(len(np.where(x_lower==True)[0])) * (self.maxs[x_lower]-self.mins[x_lower])
-                   masked_point[x_upper] = self.mins[x_upper] + np.random.rand(len(np.where(x_upper==True)[0])) * (self.maxs[x_upper]-self.mins[x_upper])
-                   proposed_pts[pt_num][self.boundary_mask] = masked_point
+                    #Occasionally reflection will result in points still outside of boundaries
+                    x_lower = masked_point < self.mins
+                    x_upper = masked_point > self.maxs
+                    if x_lower.any():
+                        masked_point[x_lower] = self.mins[x_lower] + np.random.rand(len(np.where(x_lower==True)[0])) * (self.maxs[x_lower]-self.mins[x_lower])
+                    if x_upper.any():
+                        masked_point[x_upper] = self.mins[x_upper] + np.random.rand(len(np.where(x_upper==True)[0])) * (self.maxs[x_upper]-self.mins[x_upper])
+
+                    proposed_pts[pt_num][self.boundary_mask] = masked_point
                    
-           else:
-               masked_point = np.squeeze(proposed_pts)[self.boundary_mask]
-               x_lower = masked_point < self.mins
-               x_upper = masked_point > self.maxs
-               masked_point[x_lower] = 2 * self.mins[x_lower] - masked_point[x_lower]
-               masked_point[x_upper] = 2 * self.maxs[x_upper] - masked_point[x_upper]
+            else:
+                masked_point = np.squeeze(proposed_pts)[self.boundary_mask]
+
+                x_lower = masked_point < self.mins
+                x_upper = masked_point > self.maxs
+
+                if x_lower.any():
+                    masked_point[x_lower] = 2 * self.mins[x_lower] - masked_point[x_lower]
+
+                if x_upper.any():
+
+                    masked_point[x_upper] = 2 * self.maxs[x_upper] - masked_point[x_upper]
                
-               #Occasionally reflection will result in points still outside of boundaries
-               x_lower = masked_point < self.mins
-               x_upper = masked_point > self.maxs
-               masked_point[x_lower] = self.mins[x_lower] + np.random.rand(len(np.where(x_lower==True)[0])) * (self.maxs[x_lower]-self.mins[x_lower])
-               masked_point[x_upper] = self.mins[x_upper] + np.random.rand(len(np.where(x_upper==True)[0])) * (self.maxs[x_upper]-self.mins[x_upper])
-               if not snooker:
-                   proposed_pts[0][self.boundary_mask] = masked_point
-               else:
-                   proposed_pts[self.boundary_mask] = masked_point
+                #Occasionally reflection will result in points still outside of boundaries
+                x_lower = masked_point < self.mins
+                x_upper = masked_point > self.maxs
+
+                if x_lower.any():
+                    masked_point[x_lower] = self.mins[x_lower] + np.random.rand(len(np.where(x_lower==True)[0])) * (self.maxs[x_lower]-self.mins[x_lower])
+                if x_upper.any():
+                    masked_point[x_upper] = self.mins[x_upper] + np.random.rand(len(np.where(x_upper==True)[0])) * (self.maxs[x_upper]-self.mins[x_upper])
+                if not snooker:
+                    try:
+                        proposed_pts[0][self.boundary_mask] = masked_point
+
+                    except IndexError:
+                        #Raised in the unusual case when total variable dimension = 1
+                        if self.boundary_mask:
+                            proposed_pts = np.array([masked_point])
+                else:
+                    try:
+                        proposed_pts[self.boundary_mask] = masked_point
+
+                    except IndexError:
+                        #Raised in the unusual case when total variable dimension = 1
+                        if self.boundary_mask:
+                            proposed_pts = np.array([masked_point])
 
         if not snooker:
             return proposed_pts
