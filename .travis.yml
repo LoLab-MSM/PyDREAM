@@ -13,6 +13,7 @@ before_install:
 - tar xzf BioNetGen-2.2.6-stable.tar.gz
 - export BNGPATH=`pwd`/BioNetGen-2.2.6-stable
 install:
+  - pip install python-dateutil
   - pip install .
   - pip install https://github.com/LoLab-VU/pysb/archive/master.zip
   - pip install -r requirements.txt
