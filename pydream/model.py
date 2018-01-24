@@ -22,7 +22,7 @@ class Model():
             var_end = param.dsize + var_start
             try:
                 prior_logp += param.prior(q0[var_start:var_end])
-            except ValueError:
+            except IndexError:
                 #raised if q0 is a single scalar
                 prior_logp += param.prior(q0)
             var_start += param.dsize
