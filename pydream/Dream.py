@@ -113,24 +113,22 @@ class Dream():
         self.crossover_burnin = crossover_burnin
         self.crossover_file = crossover_file
 
+        self.adapt_crossover = adapt_crossover
+
         #Load crossover values from file if given, else set to 1/nCR for all and adapt if requested
         if crossover_file:
             self.CR_probabilities = np.load(crossover_file)
             self.nCR = len(self.CR_probabilities)
-            self.adapt_crossover = adapt_crossover
             if self.adapt_crossover:
-                print('Warning: Crossover values loaded but adapt_crossover = True.  Overrode adapt_crossover input and not adapting crossover values.')
-                self.adapt_crossover = False
+                print('Warning: Crossover values loaded and adapt_crossover = True.  Crossover values will be further adapted.')
         else:
             self.CR_probabilities = [1/float(self.nCR) for i in range(self.nCR)]
-            self.adapt_crossover = adapt_crossover
 
         #Load gamma values from file if given, otherwise set to 1/ngamma for all
         if gamma_file:
             self.gamma_probabilities = np.load(gamma_file)
             if adapt_gamma:
-                print('Warning: Gamma values loaded but adapt gamma = True.  Overrode adapt_gamma input and not adapting gamma values.')
-                self.adapt_gamma = False
+                print('Warning: Gamma values loaded and adapt gamma = True.  Gamma values will be further adapted.')
         else:
             self.gamma_probabilities = [1/float(self.ngamma) for i in range(self.ngamma)]
             self.adapt_gamma = adapt_gamma
