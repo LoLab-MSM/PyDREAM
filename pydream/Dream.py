@@ -126,6 +126,7 @@ class Dream():
             self.adapt_crossover = adapt_crossover
 
         #Load gamma values from file if given, otherwise set to 1/ngamma for all
+        self.adapt_gamma = adapt_gamma
         if gamma_file:
             self.gamma_probabilities = np.load(gamma_file)
             if adapt_gamma:
@@ -133,7 +134,6 @@ class Dream():
                 self.adapt_gamma = False
         else:
             self.gamma_probabilities = [1/float(self.ngamma) for i in range(self.ngamma)]
-            self.adapt_gamma = adapt_gamma
 
         #Set crossover values and gamma (the proportion of dimensions to crossover/gamma level to choose)
         self.CR_values = np.array([m/float(self.nCR) for m in range(1, self.nCR+1)])  
