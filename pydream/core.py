@@ -7,7 +7,7 @@ from .Dream import Dream, DreamPool
 from .model import Model
 import traceback
 
-def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, restart=False, verbose=True, tempering=False, **kwargs):
+def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, restart=False, verbose=True, nverbose=10, tempering=False, **kwargs):
     """Run DREAM given a set of parameters with priors and a likelihood function.
 
     Parameters
@@ -64,10 +64,10 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
     else:
     
         if type(start) is list:
-            args = zip([step_instance]*nchains, [niterations]*nchains, start, [verbose]*nchains)
+            args = zip([step_instance]*nchains, [niterations]*nchains, start, [verbose]*nchains, [nverbose]*nchains)
 
         else:
-            args = list(zip([step_instance]*nchains, [niterations]*nchains, [start]*nchains, [verbose]*nchains))
+            args = list(zip([step_instance]*nchains, [niterations]*nchains, [start]*nchains, [verbose]*nchains, [nverbose]*nchains))
 
         returned_vals = pool.map(_sample_dream, args)
         sampled_params = [val[0] for val in returned_vals]
@@ -82,6 +82,7 @@ def _sample_dream(args):
         iterations = args[1]
         start = args[2]
         verbose = args[3]
+        nverbose = args[4]
         step_fxn = getattr(dream_instance, 'astep')
         sampled_params = np.empty((iterations, dream_instance.total_var_dimension))
         log_ps = np.empty((iterations, 1))
@@ -89,7 +90,7 @@ def _sample_dream(args):
         naccepts = 0
         naccepts100win = 0
         for iteration in range(iterations):
-            if iteration%10 == 0:
+            if iteration%nverbose == 0:
                 acceptance_rate = float(naccepts)/(iteration+1)
                 if verbose:
                     print('Iteration: ',iteration,' acceptance rate: ',acceptance_rate)
