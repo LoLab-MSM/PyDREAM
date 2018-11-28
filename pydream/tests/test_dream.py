@@ -574,7 +574,8 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
         iterations = 10
         start = np.array([-7, 8, 1.2, 0])
         verbose = False
-        args = [dream, iterations, start, verbose]
+        nverbose = 10
+        args = [dream, iterations, start, verbose, nverbose]
         sampled_params, logps = _sample_dream(args)
 
         self.assertEqual(len(sampled_params), 10)
@@ -652,6 +653,7 @@ class Test_Dream_Full_Algorithm(unittest.TestCase):
         step = Dream(model=model, save_history=True, history_thin=1, model_name='test_history_correct', adapt_crossover=False)
         sampled_params, logps = run_dream(self.param, self.like, niterations=10, nchains=5, save_history=True, history_thin=1, model_name='test_history_correct', adapt_crossover=False, verbose=False)
         history = np.load('test_history_correct_DREAM_chain_history.npy')
+
         self.assertEqual(len(history), step.total_var_dimension*((10*5/step.history_thin)+step.nseedchains))
         history_no_seedchains = history[(step.total_var_dimension*step.nseedchains)::]
 
@@ -671,10 +673,10 @@ class Test_Dream_Full_Algorithm(unittest.TestCase):
         self.param, self.like = multidmodel_uniform()
         model = Model(self.like, self.param)
         step = Dream(model=model, save_history=True, history_thin=1, model_name='test_boundaries',
-                     adapt_crossover=False, hardboundaries=True)
+                     adapt_crossover=False, hardboundaries=True, nverbose=10)
         sampled_params, logps = run_dream(self.param, self.like, niterations=1000, nchains=5, save_history=True,
                                           history_thin=1, model_name='test_boundaries', adapt_crossover=False,
-                                          verbose=False, hardboundaries=True)
+                                          verbose=True, hardboundaries=True, nverbose=10)
         history = np.load('test_boundaries_DREAM_chain_history.npy')
         variables = model.sampled_parameters
         dim = 0
@@ -687,6 +689,13 @@ class Test_Dream_Full_Algorithm(unittest.TestCase):
 
         npoints = int(len(history)/float(dim))
         reshaped_history = np.reshape(history, (npoints, dim))
+
+        print('reshaped history: ',reshaped_history)
+        print('upper ',upperbound,' and lower ',lowerbound)
+        print('lower bounds: ',(reshaped_history<lowerbound).any())
+        print('upper bounds: ',(reshaped_history>upperbound).any())
+        print('disobeyed lower: ',reshaped_history[reshaped_history<lowerbound])
+        print('disobeyed upper: ', reshaped_history[reshaped_history>upperbound])
 
         self.assertFalse((reshaped_history<lowerbound).any())
         self.assertFalse((reshaped_history>upperbound).any())
