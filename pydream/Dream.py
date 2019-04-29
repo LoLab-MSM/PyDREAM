@@ -898,7 +898,7 @@ class Dream():
         #Calculate probabilities
         sum_proposal_logps = np.sum(log_ps_sub)
         logp_prob = log_ps_sub/sum_proposal_logps
-        best_logp_loc = np.squeeze(np.where(np.random.multinomial(1, logp_prob)==1)[0])
+        best_logp_loc = int(np.squeeze(np.where(np.random.multinomial(1, logp_prob)==1)[0]))
 
         #Randomly select one of the tested points with probability proportional to the probability density at the point
         q_proposal = np.squeeze(proposed_pts[best_logp_loc])
