@@ -12,9 +12,9 @@ from necro import model
 
 # DREAM Settings
 # Number of chains - should be at least 3.
-nchains = 5
+nchains = 3
 # Number of iterations
-niterations = 50000
+niterations = 100
 
 #Initialize PySB solver object for running simulations.  Simulation timespan should match experimental data.
 # tspan = np.linspace(0,1440, num=100)
@@ -191,7 +191,8 @@ try:
     from matplotlib import pyplot as plt
     total_iterations = len(old_samples[0])
     burnin = total_iterations/2
-    samples = np.concatenate(tuple([old_samples[i][burnin:, :] for i in range(nchains)]))
+    #samples = np.concatenate((old_samples[0][burnin:, :], old_samples[1][burnin:, :], old_samples[2][burnin:, :],old_samples[3][burnin:, :], old_samples[4][burnin:, :]))
+    samples = np.concatenate(tuple([old_samples[i][int(burnin):, :] for i in range(nchains)]))
     ndims = len(sampled_parameter_names)
     colors = sns.color_palette(n_colors=ndims)
     for dim in range(ndims):
