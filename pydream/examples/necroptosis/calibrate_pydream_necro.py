@@ -169,7 +169,7 @@ if np.any(GR>1.2):
                                            niterations=niterations,
                                            nchains=nchains,
                                            start=starts,
-                                           multitry=True,
+                                           multitry=False,
                                            gamma_levels=4,
                                            adapt_gamma=True,
                                            history_thin=1,
