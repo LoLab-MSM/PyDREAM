@@ -14,7 +14,7 @@ from necro import model
 # Number of chains - should be at least 3.
 nchains = 3
 # Number of iterations
-niterations = 100
+niterations = 1000
 
 #Initialize PySB solver object for running simulations.  Simulation timespan should match experimental data.
 # tspan = np.linspace(0,1440, num=100)
@@ -193,7 +193,7 @@ try:
     burnin = total_iterations/2
     #samples = np.concatenate((old_samples[0][burnin:, :], old_samples[1][burnin:, :], old_samples[2][burnin:, :],old_samples[3][burnin:, :], old_samples[4][burnin:, :]))
     samples = np.concatenate(tuple([old_samples[i][int(burnin):, :] for i in range(nchains)]))
-    ndims = len(sampled_parameter_names)
+    ndims = len(sampled_params_list)
     colors = sns.color_palette(n_colors=ndims)
     for dim in range(ndims):
         fig = plt.figure()
