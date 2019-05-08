@@ -199,5 +199,10 @@ try:
         fig = plt.figure()
         sns.distplot(samples[:, dim], color=colors[dim], norm_hist=True)
     fig.savefig('fig_PyDREAM_dimension_'+str(dim))
+
+    for dim, param in enumerate(sampled_params_list):
+        fig = plt.figure()
+        sns.distplot(samples[:, dim], color=colors[dim], norm_hist=True, fit=param)
+    fig.savefig('fig_PyDREAM_postprior_' + str(dim))
 except ImportError:
     pass
