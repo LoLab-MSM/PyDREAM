@@ -24,7 +24,7 @@ logps_vals = [3.304257e-05, 0.009791216, 0.006110069,4.319219e-05, 0.004212645,1
          0.3127598, 0.429849, 2.33291e-06, 0.007077505, 0.6294062, 0.06419313,
          0.0008584654, 8.160445e-05, 4.354384e-06, 4.278903]
 
-scaling = [2] * 37
+scaling = [3] * 37
 idx = list(range(14, 51,1))
 row = 8
 col = 5
@@ -86,11 +86,22 @@ niterations = 1000
 #     if np.isnan(logp_data):
 #         logp_data = -np.inf
 #     return logp_data
-logps0 = np.load('dreamzs_5chain_logps_chain_0_1000.npy')
-chain0 = np.load('dreamzs_5chain_sampled_params_chain_0_4000.npy')
-chain1 = np.load('dreamzs_5chain_sampled_params_chain_1_4000.npy')
-chain2 = np.load('dreamzs_5chain_sampled_params_chain_2_4000.npy')
-
+#sampled priors
+logps0 = np.load('dreamzs_5chain_logps_chain2_0_50000.npy')
+logps1 = np.load('dreamzs_5chain_logps_chain2_0_50000.npy')
+logps2 = np.load('dreamzs_5chain_logps_chain2_0_50000.npy')
+logps3 = np.load('dreamzs_5chain_logps_chain2_0_50000.npy')
+logps4 = np.load('dreamzs_5chain_logps_chain2_0_50000.npy')
+# print(logps0[45000:])
+# quit()
+#sampled params
+chain0 = np.load('dreamzs_5chain_sampled_params_chain2_0_50000.npy')
+chain1 = np.load('dreamzs_5chain_sampled_params_chain2_1_50000.npy')
+chain2 = np.load('dreamzs_5chain_sampled_params_chain2_2_50000.npy')
+chain3 = np.load('dreamzs_5chain_sampled_params_chain2_3_50000.npy')
+chain4 = np.load('dreamzs_5chain_sampled_params_chain2_4_50000.npy')
+# print(chain0)
+# quit()
 # print(chain0)
 # print(logps0)
 # quit()
@@ -98,7 +109,8 @@ chain2 = np.load('dreamzs_5chain_sampled_params_chain_2_4000.npy')
 
 total_iterations = chain0.shape[0]
 burnin = int(total_iterations / 2)
-samples = np.concatenate((chain0[burnin:, :], chain1[burnin:, :], chain2[burnin:, :]))
+samples = np.concatenate((chain0[burnin:, :], chain1[burnin:, :], chain2[burnin:, :], chain3[burnin:, :], chain4[burnin:, :]))
+priors = np.concatenate((chain0[:, :], chain1[:, :], chain2[:, :], chain3[:, :], chain4[:, :]))
 
 # idx = list(range(14, 51,1))
 
@@ -134,7 +146,6 @@ ndims = len(idx)
 
 # #TSTING
 
-
 f, axes = plt.subplots(row, col, figsize=(15, 10), sharex=True)
 # f.suptitle("Posterior Distributions from PyDREAM calibration of Necroptosis Model", fontsize="x-large")
 # for dim, param in enumerate(sampled_params_list):
@@ -142,8 +153,10 @@ for r in range(row):
     for c in range(col):
         # for dim, param in enumerate(sampled_params_list):
         sns.distplot(norm.rvs(size=n, loc=logps_vals[counter], scale=scaling[counter]), color='red', ax=axes[r, c])
-        weights = np.ones_like(samples[:, counter])/float(len(samples[:, counter]))
+        weightss = np.ones_like(samples[:, counter])/float(len(samples[:, counter]))
+        # weightsp = np.ones_like(priors[:, counter]) / float(len(priors[:, counter]))
         sns.distplot(samples[:, counter], ax=axes[r, c])
+        # sns.distplot(priors[:, counter], ax=axes[r, c])
             # axes[r, c].hist(samples[:, counter], bins=25, color=colors[counter])
         axes[r, c].set_title(model.parameters[idx[counter]].name, fontdict={'fontsize':8})
         # axes.set_ylim([0.0, 1.0])
@@ -164,7 +177,7 @@ plt.grid(False)
 plt.xlabel("Log(Parameter value)", fontsize=14)
 plt.ylabel("Probability", fontsize=14, labelpad=15)
 # plt.title('Posterior Distributions from PyDREAM calibration of Necroptosis Model', fontsize=14)
-plt.savefig('pars_dist_plot_necro_priorsposts.pdf', format='pdf', bbox_inches="tight")
+# plt.savefig('pars_dist_plot_necro_priorsposts2.pdf', format='pdf', bbox_inches="tight")
 plt.show()
 
 quit()
