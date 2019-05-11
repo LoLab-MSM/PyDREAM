@@ -25,7 +25,7 @@ sns.set()
 # Number of chains - should be at least 3.
 nchains = 5
 # Number of iterations
-niterations = 10000
+niterations = 5000
 
 #Initialize PySB solver object for running simulations.  Simulation timespan should match experimental data.
 # tspan = np.linspace(0,1440, num=100)
@@ -172,11 +172,11 @@ sampled_params, log_ps = run_dream(parameters=sampled_params_list,
 total_iterations = niterations
 # Save sampling output (sampled parameter values and their corresponding logps).
 for chain in range(len(sampled_params)):
-    np.save('dreamzs_5chain_sampled_params_chain2_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
-    np.save('dreamzs_5chain_logps_chain2_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
+    np.save('dreamzs_5chain_sampled_params_chain3_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
+    np.save('dreamzs_5chain_logps_chain3_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
 GR = Gelman_Rubin(sampled_params)
 print('At iteration: ',total_iterations,' GR = ',GR)
-np.savetxt('dreamzs_5chain_GelmanRubin_iteration2_'+str(total_iterations)+'.txt', GR)
+np.savetxt('dreamzs_5chain_GelmanRubin_iteration3_'+str(total_iterations)+'.txt', GR)
 old_samples = sampled_params
 if np.any(GR>1.2):
     starts = [sampled_params[chain][-1, :] for chain in range(nchains)]
@@ -195,8 +195,8 @@ if np.any(GR>1.2):
                                            verbose=False,
                                            restart=True)
         for chain in range(len(sampled_params)):
-            np.save('dreamzs_5chain_sampled_params_chain2_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
-            np.save('dreamzs_5chain_logps_chain2_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
+            np.save('dreamzs_5chain_sampled_params_chain3_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
+            np.save('dreamzs_5chain_logps_chain3_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
         old_samples = [np.concatenate((old_samples[chain], sampled_params[chain])) for chain in range(nchains)]
         GR = Gelman_Rubin(old_samples)
         print('At iteration: ',total_iterations,' GR = ',GR)
