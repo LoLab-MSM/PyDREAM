@@ -24,7 +24,7 @@ logps_vals = [3.304257e-05, 0.009791216, 0.006110069,4.319219e-05, 0.004212645,1
          0.3127598, 0.429849, 2.33291e-06, 0.007077505, 0.6294062, 0.06419313,
          0.0008584654, 8.160445e-05, 4.354384e-06, 4.278903]
 
-scaling = [3] * 37
+scaling = [2] * 37
 idx = list(range(14, 51,1))
 row = 8
 col = 5
@@ -95,11 +95,11 @@ logps4 = np.load('dreamzs_5chain_logps_chain2_0_50000.npy')
 # print(logps0[45000:])
 # quit()
 #sampled params
-chain0 = np.load('dreamzs_5chain_sampled_params_chain3_0_5000.npy')
-chain1 = np.load('dreamzs_5chain_sampled_params_chain3_1_5000.npy')
-chain2 = np.load('dreamzs_5chain_sampled_params_chain3_2_5000.npy')
-chain3 = np.load('dreamzs_5chain_sampled_params_chain3_3_5000.npy')
-chain4 = np.load('dreamzs_5chain_sampled_params_chain3_4_5000.npy')
+chain0 = np.load('dreamzs_5chain_sampled_params_chain4_0_5000.npy')
+chain1 = np.load('dreamzs_5chain_sampled_params_chain4_1_5000.npy')
+chain2 = np.load('dreamzs_5chain_sampled_params_chain4_2_5000.npy')
+chain3 = np.load('dreamzs_5chain_sampled_params_chain4_3_5000.npy')
+chain4 = np.load('dreamzs_5chain_sampled_params_chain4_4_5000.npy')
 # print(chain0)
 # quit()
 # print(chain0)
@@ -160,7 +160,7 @@ for r in range(row):
             # axes[r, c].hist(samples[:, counter], bins=25, color=colors[counter])
         axes[r, c].set_title(model.parameters[idx[counter]].name, fontdict={'fontsize':8})
         # axes.set_ylim([0.0, 1.0])
-        axes[r, c].set_ylim(0.0,0.2)
+        # axes[r, c].set_ylim(0.0,0.2)
         # axes[r,c].set_ticks()
         # axes[r,c].grid()
         counter += 1
@@ -177,7 +177,7 @@ plt.grid(False)
 plt.xlabel("Log(Parameter value)", fontsize=14)
 plt.ylabel("Probability", fontsize=14, labelpad=15)
 # plt.title('Posterior Distributions from PyDREAM calibration of Necroptosis Model', fontsize=14)
-plt.savefig('pars_dist_plot_necro_priorsposts3_5000.pdf', format='pdf', bbox_inches="tight")
+plt.savefig('pars_dist_plot_necro_priorsposts4_5000.pdf', format='pdf', bbox_inches="tight")
 plt.show()
 
 quit()
