@@ -95,11 +95,11 @@ niterations = 1000
 # print(logps0[45000:])
 # quit()
 #sampled params
-chain0 = np.load('dreamzs_5chain_sampled_params_chain4_0_5000.npy')
-chain1 = np.load('dreamzs_5chain_sampled_params_chain4_1_5000.npy')
-chain2 = np.load('dreamzs_5chain_sampled_params_chain4_2_5000.npy')
-chain3 = np.load('dreamzs_5chain_sampled_params_chain4_3_5000.npy')
-chain4 = np.load('dreamzs_5chain_sampled_params_chain4_4_5000.npy')
+chain0 = np.load('dreamzs_5chain_sampled_params_chainnew_0_10000.npy')
+chain1 = np.load('dreamzs_5chain_sampled_params_chainnew_1_10000.npy')
+chain2 = np.load('dreamzs_5chain_sampled_params_chainnew_2_10000.npy')
+chain3 = np.load('dreamzs_5chain_sampled_params_chainnew_3_10000.npy')
+chain4 = np.load('dreamzs_5chain_sampled_params_chainnew_4_10000.npy')
 # print(chain0)
 # quit()
 # print(chain0)
@@ -111,6 +111,11 @@ total_iterations = chain0.shape[0]
 burnin = int(total_iterations / 2)
 samples = np.concatenate((chain0[burnin:, :], chain1[burnin:, :], chain2[burnin:, :], chain3[burnin:, :], chain4[burnin:, :]))
 priors = np.concatenate((chain0[:, :], chain1[:, :], chain2[:, :], chain3[:, :], chain4[:, :]))
+# print(priors)
+np.save('allchains10000new.npy', priors)
+# print(np.load('allchains10000new.npy'))
+
+# quit()
 
 # idx = list(range(14, 51,1))
 
