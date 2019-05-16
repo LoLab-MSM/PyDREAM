@@ -24,7 +24,7 @@ logps_vals = [3.304257e-05, 0.009791216, 0.006110069,4.319219e-05, 0.004212645,1
          0.3127598, 0.429849, 2.33291e-06, 0.007077505, 0.6294062, 0.06419313,
          0.0008584654, 8.160445e-05, 4.354384e-06, 4.278903]
 
-scaling = [2] * 37
+scaling = [3] * 37
 idx = list(range(14, 51,1))
 row = 8
 col = 5
@@ -87,11 +87,11 @@ niterations = 1000
 #         logp_data = -np.inf
 #     return logp_data
 #sampled priors
-logps0 = np.load('dreamzs_5chain_logps_chain2_0_50000.npy')
-logps1 = np.load('dreamzs_5chain_logps_chain2_0_50000.npy')
-logps2 = np.load('dreamzs_5chain_logps_chain2_0_50000.npy')
-logps3 = np.load('dreamzs_5chain_logps_chain2_0_50000.npy')
-logps4 = np.load('dreamzs_5chain_logps_chain2_0_50000.npy')
+# logps0 = np.load('dreamzs_5chain_logps_chain2_0_50000.npy')
+# logps1 = np.load('dreamzs_5chain_logps_chain2_0_50000.npy')
+# logps2 = np.load('dreamzs_5chain_logps_chain2_0_50000.npy')
+# logps3 = np.load('dreamzs_5chain_logps_chain2_0_50000.npy')
+# logps4 = np.load('dreamzs_5chain_logps_chain2_0_50000.npy')
 # print(logps0[45000:])
 # quit()
 #sampled params
@@ -177,7 +177,7 @@ plt.grid(False)
 plt.xlabel("Log(Parameter value)", fontsize=14)
 plt.ylabel("Probability", fontsize=14, labelpad=15)
 # plt.title('Posterior Distributions from PyDREAM calibration of Necroptosis Model', fontsize=14)
-plt.savefig('pars_dist_plot_necro_priorsposts4_5000.pdf', format='pdf', bbox_inches="tight")
+# plt.savefig('pars_dist_plot_necro_priorsposts4_5000.pdf', format='pdf', bbox_inches="tight")
 plt.show()
 
 quit()
