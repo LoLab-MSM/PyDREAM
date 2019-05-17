@@ -25,7 +25,7 @@ sns.set()
 # Number of chains - should be at least 3.
 nchains = 5
 # Number of iterations
-niterations = 10000
+niterations = 50000
 
 #Initialize PySB solver object for running simulations.  Simulation timespan should match experimental data.
 # tspan = np.linspace(0,1440, num=100)
