@@ -11,7 +11,9 @@ from scipy.stats import norm,uniform
 from necro import model
 import seaborn as sns
 from matplotlib import pyplot as plt
+import random
 sns.set()
+random.seed(0)
 # sns.set_color_codes()
 # sns.set_context("paper")
 # DREAM Settings
@@ -95,16 +97,19 @@ niterations = 1000
 # print(logps0[45000:])
 # quit()
 #sampled params
-chain0 = np.load('newest50000/dreamzs_5chain_sampled_params_chainnew_0_50000.npy')
-logps0 = np.load('dreamzs_5chain_logps_chainnew_0_50000.npy')
-logps1 = np.load('dreamzs_5chain_logps_chainnew_1_50000.npy')
-logps2 = np.load('dreamzs_5chain_logps_chainnew_2_50000.npy')
-logps3 = np.load('dreamzs_5chain_logps_chainnew_3_50000.npy')
-logps4 = np.load('dreamzs_5chain_logps_chainnew_4_50000.npy')
-chain1 = np.load('newest50000/dreamzs_5chain_sampled_params_chainnew_1_50000.npy')
-chain2 = np.load('newest50000/dreamzs_5chain_sampled_params_chainnew_2_50000.npy')
-chain3 = np.load('newest50000/dreamzs_5chain_sampled_params_chainnew_3_50000.npy')
-chain4 = np.load('newest50000/dreamzs_5chain_sampled_params_chainnew_4_50000.npy')
+#LOGPS
+logps0 = np.load('new_wseed_50000_6_29/newdreamzs_5chain_logps_chainnew_0_50000.npy')
+logps1 = np.load('new_wseed_50000_6_29/newdreamzs_5chain_logps_chainnew_1_50000.npy')
+logps2 = np.load('new_wseed_50000_6_29/newdreamzs_5chain_logps_chainnew_2_50000.npy')
+logps3 = np.load('new_wseed_50000_6_29/newdreamzs_5chain_logps_chainnew_3_50000.npy')
+logps4 = np.load('new_wseed_50000_6_29/newdreamzs_5chain_logps_chainnew_4_50000.npy')
+
+#CHAINS
+chain0 = np.load('new_wseed_50000_6_29/newdreamzs_5chain_sampled_params_chainnew_0_50000.npy')
+chain1 = np.load('new_wseed_50000_6_29/newdreamzs_5chain_sampled_params_chainnew_1_50000.npy')
+chain2 = np.load('new_wseed_50000_6_29/newdreamzs_5chain_sampled_params_chainnew_2_50000.npy')
+chain3 = np.load('new_wseed_50000_6_29/newdreamzs_5chain_sampled_params_chainnew_3_50000.npy')
+chain4 = np.load('new_wseed_50000_6_29/newdreamzs_5chain_sampled_params_chainnew_4_50000.npy')
 
 # print(logps0)
 # print(logps0.shape)
@@ -121,18 +126,27 @@ total_iterations = chain0.shape[0]
 iterations = logps0.shape[0]
 burnin = int(total_iterations/2)
 samples = np.concatenate((chain0[burnin:, :], chain1[burnin:, :], chain2[burnin:, :], chain3[burnin:, :], chain4[burnin:, :]))
+samples_nonlog = 10 ** samples
+
 priors = np.concatenate((chain0[:, :], chain1[:, :], chain2[:, :], chain3[:, :], chain4[:, :]))
+priors_nonlog = 10 ** priors
+# print(len(chain0[:,0]))
+# quit()
+iters = [i for i in range(125000)]
 
-iters = [i for i in range(50000)]
-
-plt.figure()
-plt.plot(iters, logps0[:,0], color = 'b')
-plt.plot(iters, logps1[:,0], color = 'red')
-plt.plot(iters, logps2[:,0], color = 'k')
-plt.plot(iters, logps3[:,0], color = 'g')
-plt.plot(iters, logps4[:,0], color = 'cyan')
-plt.show()
-quit()
+# plt.figure()
+# plt.plot(iters, samples[:,0])
+# plt.show()
+# quit()
+#
+# plt.figure()
+# plt.plot(iters, logps0[:,0], color = 'b')
+# plt.plot(iters, logps1[:,0], color = 'red')
+# plt.plot(iters, logps2[:,0], color = 'k')
+# plt.plot(iters, logps3[:,0], color = 'g')
+# plt.plot(iters, logps4[:,0], color = 'cyan')
+# plt.show()
+# quit()
 # print(priors)
 # np.save('allchains50000neww.npy', priors)
 # print(len(priors))
@@ -171,7 +185,77 @@ ndims = len(idx)
 # plt.ylabel("Probability", fontsize=14, labelpad=15)
 # plt.savefig('pars_dist_plot_necro2_sns.pdf', format='pdf', bbox_inches="tight")
 # quit()
+#
+# plt.figure(figsize=(15, 10))
+# for i in range(1,38):
+#     plt.subplot(8, 5, i)
+#     plt.plot(chain0[:, counter])
+#     plt.title(model.parameters[idx[counter]].name, fontdict={'fontsize': 10})
+#     plt.xlabel("Iteration", fontsize=10)
+#     plt.ylabel("Log(10) PV", fontsize=9, labelpad=15)
+#     counter += 1
+# plt.savefig('pydream_param_traceplot_629_chain0.pdf', format='pdf', bbox_inches="tight")
+#
+# plt.show()
+# quit()
 
+plt.figure(figsize=(15, 10))
+for i in range(1,38):
+    plt.subplot(8, 5, i)
+    # plt.plot(samples[:, counter])
+    sns.distplot(norm.rvs(size=n, loc=logps_vals[counter], scale=scaling[counter]), color='red')
+    sns.distplot(samples[:, counter])
+    plt.title(model.parameters[idx[counter]].name, fontdict={'fontsize': 10})
+    counter += 1
+    plt.xlabel("Log(10) Value", fontsize=10)
+    plt.ylabel("Probability", fontsize=9, labelpad=15)
+plt.savefig('pydream_priorpost_traceplot_629_all_chains.pdf', format='pdf', bbox_inches="tight")
+plt.show()
+quit()
+#PLOTTING PARAM TRACEPLOTS
+f, axes = plt.subplots(row, col, figsize=(15, 10), sharex=True)
+# f.suptitle("Posterior Distributions from PyDREAM calibration of Necroptosis Model", fontsize="x-large")
+# for dim, param in enumerate(sampled_params_list):
+for r in range(row):
+    for c in range(col):
+        # for dim, param in enumerate(sampled_params_list):
+        # sns.distplot(norm.rvs(size=n, loc=logps_vals[counter], scale=scaling[counter]), color='red', ax=axes[r, c])
+        # weightss = np.ones_like(samples[:, counter])/float(len(samples[:, counter]))
+        # weightsp = np.ones_like(priors[:, counter]) / float(len(priors[:, counter]))
+        axes[r, c].plot(samples[:, counter], ax=axes[r, c])
+        # sns.distplot(priors[:, counter], ax=axes[r, c])
+            # axes[r, c].hist(samples[:, counter], bins=25, color=colors[counter])
+        axes[r, c].set_title(model.parameters[idx[counter]].name, fontdict={'fontsize':8})
+        f.add_subplot(111, frameon=False)
+        f.subplots_adjust(wspace=0.4)
+        f.subplots_adjust(hspace=0.5)
+        # hide tick and tick label of the big axes
+        plt.tick_params(labelcolor='none', top='off', bottom='on', left='off', right='off')
+        plt.grid(False)
+        plt.xlabel("Log(Parameter value)", fontsize=14)
+        plt.ylabel("Probability", fontsize=14, labelpad=15)
+        # axes.set_ylim([0.0, 1.0])
+        # axes[r, c].set_ylim(0.0,0.2)
+        # axes[r,c].set_ticks()
+        # axes[r,c].grid()
+        counter += 1
+
+        if counter >= len(idx):
+            break
+
+    # f.add_subplot(111, frameon=False)
+    # f.subplots_adjust(wspace=0.4)
+    # f.subplots_adjust(hspace=0.5)
+    # # hide tick and tick label of the big axes
+    # plt.tick_params(labelcolor='none', top='off', bottom='on', left='off', right='off')
+    # plt.grid(False)
+    # plt.xlabel("Log(Parameter value)", fontsize=14)
+    # plt.ylabel("Probability", fontsize=14, labelpad=15)
+# plt.title('Posterior Distributions from PyDREAM calibration of Necroptosis Model', fontsize=14)
+# plt.savefig('pars_dist_plot_necro_priorsposts_50000.pdf', format='pdf', bbox_inches="tight")
+plt.show()
+
+quit()
 
 # #TSTING
 
@@ -214,7 +298,8 @@ quit()
 # #TESTING
 
 #FROM JARM OSCAR
-f, axes = plt.subplots(row, col, figsize=(15, 10), sharex=True)
+f, axes = plt.subplots(row, col, figsize=(15, 10),sharex=True, sharey=True)
+# axes.tick_params(labelcolor='w', top='on', bottom='on', left='on', right='on')
 # for dim, param in enumerate(sampled_params_list):
 for r in range(row):
     for c in range(col):
@@ -225,6 +310,8 @@ for r in range(row):
         axes[r, c].set_title(model.parameters[idx[counter]].name, fontdict={'fontsize':8})
         # axes.set_ylim([0.0, 1.0])
         axes[r, c].set_ylim(0.0,0.25)
+        # axes[r,c].tick_params(labelcolor='w', top='on', bottom='on', left='on', right='on')
+        # axes[r,c].set_major_locator(plt.MaxNLocator(3))
         # axes[r,c].grid()
         counter += 1
 
@@ -236,7 +323,7 @@ f.subplots_adjust(wspace=0.4)
 f.subplots_adjust(hspace=0.5)
 # hide tick and tick label of the big axes
 plt.ylim(top=1.0)
-plt.tick_params(labelcolor='none', top='off', bottom='off', left='off', right='off')
+plt.tick_params(labelcolor='none', top='on', bottom='on', left='on', right='on')
 plt.grid(False)
 plt.xlabel("Log(Parameter value)", fontsize=14)
 plt.ylabel("Probability", fontsize=14, labelpad=15)
