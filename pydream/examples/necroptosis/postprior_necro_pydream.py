@@ -19,12 +19,19 @@ random.seed(0)
 # DREAM Settings
 # Number of chains - should be at least 3.
 #Plotting the prior distributions
-logps_vals = [3.304257e-05, 0.009791216, 0.006110069,4.319219e-05, 0.004212645,1.164332e-05,
+model_params_start =np.array([])
+
+logps_vals = np.array([3.304257e-05, 0.009791216, 0.006110069,4.319219e-05, 0.004212645,1.164332e-05,
          0.02404257,3.311086e-05,0.04280399,2.645815e-05,0.01437707,
          0.2303744, 2.980688e-05, 0.04879773, 1.121503e-05, 0.001866713, 0.7572178, 1.591283e-05,
          0.03897146, 3.076363, 3.73486, 3.2162e-06, 8.78243e-05, 0.02906341,5.663104e-05, 0.02110469, 0.1294086,
          0.3127598, 0.429849, 2.33291e-06, 0.007077505, 0.6294062, 0.06419313,
-         0.0008584654, 8.160445e-05, 4.354384e-06, 4.278903]
+         0.0008584654, 8.160445e-05, 4.354384e-06, 4.278903])
+
+
+nonlogps_vals = 10 ** logps_vals
+print(nonlogps_vals)
+quit()
 
 scaling = [3] * 37
 idx = list(range(14, 51,1))
@@ -104,12 +111,25 @@ logps2 = np.load('new_wseed_50000_6_29/newdreamzs_5chain_logps_chainnew_2_50000.
 logps3 = np.load('new_wseed_50000_6_29/newdreamzs_5chain_logps_chainnew_3_50000.npy')
 logps4 = np.load('new_wseed_50000_6_29/newdreamzs_5chain_logps_chainnew_4_50000.npy')
 
+p2logps0 = np.load('pydream_wvar_7_4_50000/p2newdreamzs_5chain_logps_chainnew_0_50000.npy')
+p2logps1 = np.load('pydream_wvar_7_4_50000/p2newdreamzs_5chain_logps_chainnew_1_50000.npy')
+p2logps2 = np.load('pydream_wvar_7_4_50000/p2newdreamzs_5chain_logps_chainnew_2_50000.npy')
+p2logps3 = np.load('pydream_wvar_7_4_50000/p2newdreamzs_5chain_logps_chainnew_3_50000.npy')
+p2logps4 = np.load('pydream_wvar_7_4_50000/p2newdreamzs_5chain_logps_chainnew_4_50000.npy')
+
 #CHAINS
 chain0 = np.load('new_wseed_50000_6_29/newdreamzs_5chain_sampled_params_chainnew_0_50000.npy')
 chain1 = np.load('new_wseed_50000_6_29/newdreamzs_5chain_sampled_params_chainnew_1_50000.npy')
 chain2 = np.load('new_wseed_50000_6_29/newdreamzs_5chain_sampled_params_chainnew_2_50000.npy')
 chain3 = np.load('new_wseed_50000_6_29/newdreamzs_5chain_sampled_params_chainnew_3_50000.npy')
 chain4 = np.load('new_wseed_50000_6_29/newdreamzs_5chain_sampled_params_chainnew_4_50000.npy')
+
+#CHAINS
+p2chain0 = np.load('pydream_wvar_7_4_50000/p2newdreamzs_5chain_sampled_params_chainnew_0_50000.npy')
+p2chain1 = np.load('pydream_wvar_7_4_50000/p2newdreamzs_5chain_sampled_params_chainnew_1_50000.npy')
+p2chain2 = np.load('pydream_wvar_7_4_50000/p2newdreamzs_5chain_sampled_params_chainnew_2_50000.npy')
+p2chain3 = np.load('pydream_wvar_7_4_50000/p2newdreamzs_5chain_sampled_params_chainnew_3_50000.npy')
+p2chain4 = np.load('pydream_wvar_7_4_50000/p2newdreamzs_5chain_sampled_params_chainnew_4_50000.npy')
 
 # print(logps0)
 # print(logps0.shape)
@@ -125,6 +145,7 @@ chain4 = np.load('new_wseed_50000_6_29/newdreamzs_5chain_sampled_params_chainnew
 total_iterations = chain0.shape[0]
 iterations = logps0.shape[0]
 burnin = int(total_iterations/2)
+p2samples = np.concatenate((p2chain0[burnin:, :], p2chain1[burnin:, :], p2chain2[burnin:, :], p2chain3[burnin:, :], p2chain4[burnin:, :]))
 samples = np.concatenate((chain0[burnin:, :], chain1[burnin:, :], chain2[burnin:, :], chain3[burnin:, :], chain4[burnin:, :]))
 samples_nonlog = 10 ** samples
 
@@ -132,7 +153,7 @@ priors = np.concatenate((chain0[:, :], chain1[:, :], chain2[:, :], chain3[:, :],
 priors_nonlog = 10 ** priors
 # print(len(chain0[:,0]))
 # quit()
-iters = [i for i in range(125000)]
+iters = [i for i in range(50000)]
 
 # plt.figure()
 # plt.plot(iters, samples[:,0])
@@ -140,11 +161,24 @@ iters = [i for i in range(125000)]
 # quit()
 #
 # plt.figure()
+# # plt.plot(iters, p2logps0[:,0], color = 'b') #best
+# # plt.plot(iters, p2logps1[:,0], color = 'red')
+# # plt.plot(iters, p2logps2[:,0], color = 'k')
+# # plt.plot(iters, p2logps3[:,0], color = 'g')
+# plt.plot(iters, p2logps4[:,0], color = 'cyan')
+# plt.xlabel("Iteration", fontsize=14)
+# plt.ylabel("Likelihood", fontsize=14, labelpad=15)
+# plt.show()
+# quit()
+#
+# plt.figure()
 # plt.plot(iters, logps0[:,0], color = 'b')
 # plt.plot(iters, logps1[:,0], color = 'red')
 # plt.plot(iters, logps2[:,0], color = 'k')
-# plt.plot(iters, logps3[:,0], color = 'g')
+# plt.plot(iters, logps3[:,0], color = 'g') #best
 # plt.plot(iters, logps4[:,0], color = 'cyan')
+# plt.xlabel("Iteration", fontsize=14)
+# plt.ylabel("Likelihood", fontsize=14, labelpad=15)
 # plt.show()
 # quit()
 # print(priors)
@@ -185,16 +219,16 @@ ndims = len(idx)
 # plt.ylabel("Probability", fontsize=14, labelpad=15)
 # plt.savefig('pars_dist_plot_necro2_sns.pdf', format='pdf', bbox_inches="tight")
 # quit()
-#
+# #
 # plt.figure(figsize=(15, 10))
 # for i in range(1,38):
 #     plt.subplot(8, 5, i)
-#     plt.plot(chain0[:, counter])
+#     plt.plot(p2chain0[:, counter])
 #     plt.title(model.parameters[idx[counter]].name, fontdict={'fontsize': 10})
 #     plt.xlabel("Iteration", fontsize=10)
 #     plt.ylabel("Log(10) PV", fontsize=9, labelpad=15)
 #     counter += 1
-# plt.savefig('pydream_param_traceplot_629_chain0.pdf', format='pdf', bbox_inches="tight")
+# # plt.savefig('pydream_param_traceplot_629_chain0.pdf', format='pdf', bbox_inches="tight")
 #
 # plt.show()
 # quit()
@@ -204,12 +238,12 @@ for i in range(1,38):
     plt.subplot(8, 5, i)
     # plt.plot(samples[:, counter])
     sns.distplot(norm.rvs(size=n, loc=logps_vals[counter], scale=scaling[counter]), color='red')
-    sns.distplot(samples[:, counter])
+    sns.distplot(p2samples[:, counter])
     plt.title(model.parameters[idx[counter]].name, fontdict={'fontsize': 10})
     counter += 1
     plt.xlabel("Log(10) Value", fontsize=10)
     plt.ylabel("Probability", fontsize=9, labelpad=15)
-plt.savefig('pydream_priorpost_traceplot_629_all_chains.pdf', format='pdf', bbox_inches="tight")
+# plt.savefig('pydream_priorpost_traceplot_629_all_chains.pdf', format='pdf', bbox_inches="tight")
 plt.show()
 quit()
 #PLOTTING PARAM TRACEPLOTS
