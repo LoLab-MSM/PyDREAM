@@ -69,7 +69,7 @@ Monomer('RIP3', ['bRHIM', 'bDD', 'state'], {'state': ['unmod', 'po4', 'trunc', '
 Monomer('MLKL', ['bRHIM', 'state'], {'state': ['unmod', 'active', 'inactive']})
 Monomer('LUBAC', ['brip'])
 
-Parameter('TNF_0', 2326)
+Parameter('TNF_0', 232)
 Parameter('TNFR_0', 4800)
 Parameter('TRADD_0', 4696) #4696
 Parameter('RIP1_0', 40000)

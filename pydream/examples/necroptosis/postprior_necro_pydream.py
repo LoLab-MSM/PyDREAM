@@ -30,8 +30,8 @@ logps_vals = np.array([3.304257e-05, 0.009791216, 0.006110069,4.319219e-05, 0.00
 
 
 nonlogps_vals = 10 ** logps_vals
-print(nonlogps_vals)
-quit()
+# print(nonlogps_vals)
+# quit()
 
 scaling = [3] * 37
 idx = list(range(14, 51,1))
@@ -153,7 +153,7 @@ priors = np.concatenate((chain0[:, :], chain1[:, :], chain2[:, :], chain3[:, :],
 priors_nonlog = 10 ** priors
 # print(len(chain0[:,0]))
 # quit()
-iters = [i for i in range(50000)]
+
 
 # plt.figure()
 # plt.plot(iters, samples[:,0])
@@ -161,25 +161,26 @@ iters = [i for i in range(50000)]
 # quit()
 #
 # plt.figure()
-# # plt.plot(iters, p2logps0[:,0], color = 'b') #best
-# # plt.plot(iters, p2logps1[:,0], color = 'red')
-# # plt.plot(iters, p2logps2[:,0], color = 'k')
-# # plt.plot(iters, p2logps3[:,0], color = 'g')
-# plt.plot(iters, p2logps4[:,0], color = 'cyan')
-# plt.xlabel("Iteration", fontsize=14)
-# plt.ylabel("Likelihood", fontsize=14, labelpad=15)
+# plt.plot(iters, samples[:,0], color = 'b') #best
+# plt.plot(iters, chain1[:,0], color = 'red')
+# plt.plot(iters, chain2[:,0], color = 'k')
+# plt.hist(chain0[:,0], bins = 25, color = 'b') # best
+# plt.plot(iters, chain4[:,0], color = 'cyan')
+# plt.xlabel("Likelihood", fontsize=14)
+# plt.ylabel("Frequency", fontsize=14, labelpad=15)
 # plt.show()
 # quit()
 #
-# plt.figure()
-# plt.plot(iters, logps0[:,0], color = 'b')
+iters = [i for i in range(50000)]
+plt.figure()
+plt.plot(iters, logps0[:,0], color = 'b')
 # plt.plot(iters, logps1[:,0], color = 'red')
 # plt.plot(iters, logps2[:,0], color = 'k')
 # plt.plot(iters, logps3[:,0], color = 'g') #best
 # plt.plot(iters, logps4[:,0], color = 'cyan')
-# plt.xlabel("Iteration", fontsize=14)
-# plt.ylabel("Likelihood", fontsize=14, labelpad=15)
-# plt.show()
+plt.xlabel("Iteration", fontsize=14)
+plt.ylabel("Likelihood", fontsize=14, labelpad=15)
+plt.show()
 # quit()
 # print(priors)
 # np.save('allchains50000neww.npy', priors)
@@ -237,8 +238,8 @@ plt.figure(figsize=(15, 10))
 for i in range(1,38):
     plt.subplot(8, 5, i)
     # plt.plot(samples[:, counter])
-    sns.distplot(norm.rvs(size=n, loc=logps_vals[counter], scale=scaling[counter]), color='red')
-    sns.distplot(p2samples[:, counter])
+    sns.distplot(norm.rvs(size=n, loc=logps_vals[counter], scale=scaling[counter]), color='cyan')
+    sns.distplot(samples[:, counter])
     plt.title(model.parameters[idx[counter]].name, fontdict={'fontsize': 10})
     counter += 1
     plt.xlabel("Log(10) Value", fontsize=10)
