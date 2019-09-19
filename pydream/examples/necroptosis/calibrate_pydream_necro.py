@@ -8,7 +8,7 @@ import numpy as np
 from pydream.parameters import SampledParam
 from pydream.convergence import Gelman_Rubin
 from scipy.stats import norm,uniform
-from necro import model
+from necro_uncal_new import model
 import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set()
@@ -53,12 +53,44 @@ def normalize(trajectories):
     return (trajectories - ymin) / (ymax - ymin)
 
 t = np.array([0., 30,  60,   120,  180, 270,  480,  960, 1440])
-newt = np.array([0., 60, 240,  480, 600, 720, 840, 960, 1080, 1200])
-# data100 = np.array([0., 0., 0., 0., 0.01, 0.05, 0.5, 0.99, 1.])
-# stdev100 =
-data10 = np.array([0.0096, 0.048, 0.178, 0.287, 0.497, 0.547, 0.770, 0.808, 0.953, 1.0])
-stdev10 = np.array([.05, .02, .08, .11, .11, .12, .16, .09, .06, .01])
-solver = ScipyOdeSimulator(model, tspan=newt) #, rtol=1e-6, # rtol : float or sequence relative tolerance for solution
+# newt = np.array([0., 60, 240,  480, 600, 720, 840, 960, 1080, 1200])
+data100 = np.array([0., 0., 0., 0., 0.01, 0.05, 0.5, 0.99, 1.])
+# # stdev100 =
+# data10 = np.array([0.0096, 0.048, 0.178, 0.287, 0.497, 0.547, 0.770, 0.808, 0.953, 1.0])
+# stdev10 = np.array([.05, .02, .08, .11, .11, .12, .16, .09, .06, .01])
+
+# x100 = np.array([0., .5, 1.5, 4.5, 8, 10,  12, 16])
+# y100 = np.array([0.,
+# 0.0088569170874609,0.0161886154261265,
+# 0.0373005242261882,
+# 0.2798939020159581, 0.517425,
+# 0.639729406776,
+# 1])
+#
+# x10 = np.array([0., .5, 1.5, 4.5, 8, 12, 16])
+# y10 = np.array([0., 0.0106013664572332,
+# 0.00519576571714913,
+# 0.02967443048221,
+# 0.050022163974868,
+# 0.198128107774737,
+# 0.56055140114867])
+
+x100 = np.array([30, 90, 270, 480, 600, 720, 840, 960])
+y100 = np.array([
+0.00885691708746097,0.0161886154261265,
+0.0373005242261882,
+0.2798939020159581,0.51,
+0.7797294067, 0.95,
+1])
+
+# x10 = np.array([.5, 1.5, 4.5, 8, 10, 12, 14, 16])
+y10 = np.array([0.0106013664572332,
+0.00519576571714913,
+0.02967443048221,
+0.050022163974868,
+0.108128107774737, 0.25,
+0.56055140114867, 0.77])
+solver = ScipyOdeSimulator(model, tspan=x100) #, rtol=1e-6, # rtol : float or sequence relative tolerance for solution
                             #atol=1e-6) #atol : float or sequence absolute tolerance for solution
 
 rate_params = model.parameters_rules() # these are only the parameters involved in the rules
@@ -66,11 +98,55 @@ param_values = np.array([p.value for p in model.parameters]) # these are all the
 rate_mask = np.array([p in rate_params for p in model.parameters])  # this picks the element of intersection
 
 def likelihood(position):
+    # params_tmp = np.copy(position)
+    # rate_params = 10 ** params_tmp #don't need to change
+    # param_values[rate_mask] = 10 ** params_tmp  # don't need to change
+    # #make a new parameter value set for each of the KD
+    # # x1_params = np.copy(param_values)
+    # # x1_params[0] = 233
+    # # ko_pars = [x1_params, param_values]
+    #
+    # result = solver.run(param_values=param_values)
+    #
+    # ysim_array11 = result.observables[0]['MLKLa_obs']
+    # # ysim_array22 = result.observables[1]['MLKLa_obs']
+    #
+    # # ysim_array = extract_records(solver.yobs, obs_names)
+    # ysim_norm11 = normalize(ysim_array11)
+    # # ysim_norm22 = normalize(ysim_array22)
+    #
+    # # mlkl_10 = np.array([0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10])
+    # # mlkl_1 = np.array([0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10])
+    # # mlkl_10 = np.array([0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05])
+    # # mlkl_1 = np.array([0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05])
+    #
+    # # e1 = np.sum((y10 - ysim_norm11) ** 2 / (mlkl_10))
+    # # e2 = np.sum((y1 - ysim_norm22) ** 2 / (mlkl_1))
+    # #
+    # e1 = np.sum((data100 - ysim_norm11) ** 2)
+    # # e2 = np.sum((y10 - ysim_norm22) ** 2)
+    #
+    # error = e1
+    # return error,
+
+
     params_tmp = np.copy(position)  # here you pass the parameter vector; the point of making a copy of it is in order not to modify it
     param_values[rate_mask] = 10 ** params_tmp  # see comment above *
-    result = solver.run(param_values=param_values)
-    ysim_norm = normalize(result.observables['MLKLa_obs'])
-    error = np.sum((data10 - ysim_norm) ** 2)/(stdev10)
+
+    params_10 = np.copy(param_values)
+    params_10[0] = 233
+    pars = [param_values, params_10]
+    result = solver.run(param_values=pars)
+
+    ysim_norm100 = normalize(result.observables[0]['MLKLa_obs'])
+    ysim_norm10 = normalize(result.observables[1]['MLKLa_obs'])
+    # result = solver.run(param_values=param_values)
+    # ysim_norm = normalize(result.observables['MLKLa_obs'])
+    # error = np.sum(((y100 - ysim_norm) ** 2))
+    e1 = np.sum(((y100 - ysim_norm100) ** 2))
+    e2 = np.sum(((y10 - ysim_norm10) ** 2))
+    error = e1 + e2
+
     return -error
 
 
@@ -162,14 +238,20 @@ sp_p19f = SampledParam(norm, loc=np.log10(0.6294062), scale=2.0)
 sampled_params_list.append(sp_p19f)
 sp_p20f = SampledParam(norm, loc=np.log10(0.06419313), scale=2.0)
 sampled_params_list.append(sp_p20f)
-sp_p21f = SampledParam(norm, loc=np.log10(0.0008584654), scale=2.0)
+sp_p21f = SampledParam(norm, loc=np.log10(0.008584654), scale=2.0)
 sampled_params_list.append(sp_p21f)
 sp_p22f = SampledParam(norm, loc=np.log10(8.160445e-05), scale=2.0)
 sampled_params_list.append(sp_p22f)
-sp_p22r = SampledParam(norm, loc=np.log10(4.354384e-06), scale=2.0)
+sp_p22r = SampledParam(norm, loc=np.log10(4.354384e-03), scale=2.0)
 sampled_params_list.append(sp_p22r)
-sp_p23f = SampledParam(norm, loc=np.log10(4.278903), scale=2.0)
+sp_p23f = SampledParam(norm, loc=np.log10(0.008584654), scale=2.0)
 sampled_params_list.append(sp_p23f)
+sp_p24f = SampledParam(norm, loc=np.log10(8.160445e-05), scale=2.0)
+sampled_params_list.append(sp_p24f)
+sp_p24r = SampledParam(norm, loc=np.log10(4.354384e-06), scale=2.0)
+sampled_params_list.append(sp_p24r)
+sp_p25f = SampledParam(norm, loc=np.log10(4.278903), scale=2.0)
+sampled_params_list.append(sp_p25f)
 # sampled_params_list = list()
 # sp_p1f = SampledParam(norm, loc=np.log10(3.304257e-05), scale=3.0)
 # sampled_params_list.append(sp_p1f)
@@ -251,7 +333,7 @@ sampled_params_list.append(sp_p23f)
 # plt.show()
 # quit()
 
-sampled_params_list = sampled_params_list
+# sampled_params_list = sampled_params_list
 
 converged = False
 sampled_params, log_ps = run_dream(parameters=sampled_params_list,
@@ -268,11 +350,11 @@ sampled_params, log_ps = run_dream(parameters=sampled_params_list,
 total_iterations = niterations
 # Save sampling output (sampled parameter values and their corresponding logps).
 for chain in range(len(sampled_params)):
-    np.save('p1newdreamzs_5chain_sampled_params_chain10_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
-    np.save('p1newdreamzs_5chain_logps_chain10_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
+    np.save('dreamzs_5chain_sampled_params_chain_919_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
+    np.save('dreamzs_5chain_logps_chain_919_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
 GR = Gelman_Rubin(sampled_params)
 print('At iteration: ',total_iterations,' GR = ',GR)
-np.savetxt('p1newdreamzs_5chain_GelmanRubin_iteration10_'+str(total_iterations)+'.txt', GR)
+np.savetxt('dreamzs_5chain_GelmanRubin_iteration_919_'+str(total_iterations)+'.txt', GR)
 old_samples = sampled_params
 if np.any(GR>1.2):
     starts = [sampled_params[chain][-1, :] for chain in range(nchains)]
@@ -291,12 +373,12 @@ if np.any(GR>1.2):
                                            verbose=False,
                                            restart=True)
         for chain in range(len(sampled_params)):
-            np.save('p1newdreamzs_5chain_sampled_params_chain10_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
-            np.save('p1newdreamzs_5chain_logps_chain10_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
+            np.save('dreamzs_5chain_sampled_params_chain_919_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
+            np.save('dreamzs_5chain_logps_chain_919_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
         old_samples = [np.concatenate((old_samples[chain], sampled_params[chain])) for chain in range(nchains)]
         GR = Gelman_Rubin(old_samples)
         print('At iteration: ',total_iterations,' GR = ',GR)
-        np.savetxt('p1newdreamzs_5chain_GelmanRubin_iteration10_' + str(total_iterations)+'.txt', GR)
+        np.savetxt('dreamzs_5chain_GelmanRubin_iteration_919_' + str(total_iterations)+'.txt', GR)
         if np.all(GR<1.2):
             converged = True
 try:
@@ -312,6 +394,6 @@ try:
     for dim in range(ndims):
         fig = plt.figure()
         sns.distplot(samples[:, dim], color=colors[dim], norm_hist=True)
-    fig.savefig('p1newfig_PyDREAM_dimension10_'+str(dim))
+    fig.savefig('fig_PyDREAM_dimension_9_19_'+str(dim))
 except ImportError:
     pass
