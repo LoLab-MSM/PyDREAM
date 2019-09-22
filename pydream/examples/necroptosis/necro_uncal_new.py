@@ -155,9 +155,9 @@ Parameter('p15r', 0.018)
 Parameter('p16f',3.27e-2)
 Parameter('p16r', 0.018) #not used
 # Parameter('p17f', 1e-1)
-Parameter('p18f', 1e-6)
-Parameter('p18r', 1e-3)
-Parameter('p19f', 1e-1)
+# Parameter('p18f', 1e-6)
+# Parameter('p18r', 1e-3)
+# Parameter('p19f', 1e-1)
 
 #RIP1 deub and necrosome formation
 
@@ -181,9 +181,10 @@ Rule('activate_C8', TRADD(brec = None, brip = 3, bDD1=None, bDD2=None) % RIP1(bs
 #ADDED REACTIONS
 #added params
 Parameter('p17f',1e-6)
-Parameter('p24f', 1e-6)
-Parameter('p24r', 1e-3)
-Parameter('p25f', 1e-6)
+Parameter('p18f', 1e-6)
+Parameter('p18r', 1e-3)
+Parameter('p19f', 1e-1)
+
 
 Rule('catalyze_FADDANY_flip_L', TRADD(brec = None, brip = 3, bDD1=None, bDD2=None) % RIP1(bscf=3, btraf=None, bub1=None, bub2=None, bub3=None,bDD = 1,bRHIM=None,bMLKL=None, state='deub') % FADD(bDD=1,bDED1 = 2, bDED2 = None) % C8(bf=2,flip = 4, state='A') % flip_L(bDED=4, state = 'A') >>
      TRADD(brec = None, brip = None, bDD1=None, bDD2=None) + RIP1(bscf=None, btraf=None, bub1=None, bub2=None, bub3=None,bDD = None,bRHIM=None,bMLKL=None, state='trunc') + FADD(bDD=None,bDED1 = None, bDED2 = None) + C8(bf=None,flip = 4, state='A') % flip_L(bDED=4, state = 'A') , p17f)
@@ -191,48 +192,53 @@ Rule('catalyze_FADDANY_flip_L', TRADD(brec = None, brip = 3, bDD1=None, bDD2=Non
 #
 Rule('bind_C8Flip_RIP1RIP3', TRADD(brec = None, brip = 3, bDD1=None, bDD2=None) % RIP1(bscf=3, btraf=None, bub1=None, bub2=None, bub3=None,bDD = 1,bRHIM=5,bMLKL=None, state='deub') % FADD(bDD=1,bDED1 = None, bDED2 = None) % RIP3(bRHIM=5, bDD = None, state='unmod') +
      C8(bf=None,flip = 4, state='A') % flip_L(bDED=4, state = 'A') | TRADD(brec = None, brip = 3, bDD1=None, bDD2=None) % RIP1(bscf=3, btraf=None, bub1=None, bub2=None, bub3=6,bDD = 1,bRHIM=5,bMLKL=None, state='deub') % FADD(bDD=1,bDED1 = None, bDED2 = None)
-     % RIP3(bRHIM=5, bDD = None, state='unmod')% C8(bf=6,flip = 4, state='A') % flip_L(bDED=4, state = 'A'), p24f, p24r)
+     % RIP3(bRHIM=5, bDD = None, state='unmod')% C8(bf=6,flip = 4, state='A') % flip_L(bDED=4, state = 'A'), p18f, p18r)
 
 Rule('RIP1truc_C8Flip', TRADD(brec = None, brip = 3, bDD1=None, bDD2=None) % RIP1(bscf=3, btraf=None, bub1=None, bub2=None, bub3=6,bDD = 1,bRHIM=5,bMLKL=None, state='deub') % FADD(bDD=1,bDED1 = None, bDED2 = None)
      % RIP3(bRHIM=5, bDD = None, state='unmod')% C8(bf=6,flip = 4, state='A') % flip_L(bDED=4, state = 'A') >> TRADD(brec = None, brip = None, bDD1=None, bDD2=None) + RIP1(bscf=None, btraf=None, bub1=None, bub2=None, bub3=None,bDD = None,bRHIM=None,bMLKL=None, state='trunc') +
-     FADD(bDD=None,bDED1 = None, bDED2 = None) +  RIP3(bRHIM=None, bDD = None, state='unmod') + C8(bf=None,flip = 4, state='A') % flip_L(bDED=4, state = 'A'), p25f)
+     FADD(bDD=None,bDED1 = None, bDED2 = None) +  RIP3(bRHIM=None, bDD = None, state='unmod') + C8(bf=None,flip = 4, state='A') % flip_L(bDED=4, state = 'A'), p19f)
 
 
 
 #END ADDED REACTIONS
 
 
-
+Parameter('p20f', 1e-2)
+Parameter('p20r', 1e-3)
+Parameter('p21f', 1e-3)
 #RIP3 reactions to MLKL
 
 Rule('bind_FADDANY_proC8', TRADD(brec = None, brip = 3, bDD1=None, bDD2=None) % RIP1(bscf=3, btraf=None, bub1=None, bub2=None, bub3=None,bDD = 1,bRHIM=None,bMLKL=None, state='deub') % FADD(bDD=1,bDED1 = None, bDED2 = None) + RIP3(bRHIM=None, bDD = None, state='unmod')
-     | TRADD(brec = None, brip = 3, bDD1=None, bDD2=None) % RIP1(bscf=3, btraf=None, bub1=None, bub2=None, bub3=None,bDD = 1,bRHIM=5,bMLKL=None, state='deub') % FADD(bDD=1,bDED1 = None, bDED2 = None) % RIP3(bRHIM=5, bDD = None, state='unmod'), p18f,p18r)
+     | TRADD(brec = None, brip = 3, bDD1=None, bDD2=None) % RIP1(bscf=3, btraf=None, bub1=None, bub2=None, bub3=None,bDD = 1,bRHIM=5,bMLKL=None, state='deub') % FADD(bDD=1,bDED1 = None, bDED2 = None) % RIP3(bRHIM=5, bDD = None, state='unmod'), p20f,p20r)
 
 Rule('C8_activation2', TRADD(brec = None, brip = 3, bDD1=None, bDD2=None) % RIP1(bscf=3, btraf=None, bub1=None, bub2=None, bub3=None,bDD = 1,bRHIM=5,bMLKL=None, state='deub') % FADD(bDD=1,bDED1 = None, bDED2 = None) % RIP3(bRHIM=5, bDD = None, state='unmod')
-     >> TRADD(brec = None, brip = None, bDD1=None, bDD2=None) + FADD(bDD=None,bDED1 = None, bDED2 = None) + RIP1(bscf = None, bub1 = None, bub2 = None, bub3 = None, bDD=None, btraf=None, bMLKL = None, bRHIM = 5, state = 'deub')% RIP3(bRHIM=5, bDD = None, state='unmod'), p19f)
+     >> TRADD(brec = None, brip = None, bDD1=None, bDD2=None) + FADD(bDD=None,bDED1 = None, bDED2 = None) + RIP1(bscf = None, bub1 = None, bub2 = None, bub3 = None, bDD=None, btraf=None, bMLKL = None, bRHIM = 5, state = 'deub')% RIP3(bRHIM=5, bDD = None, state='unmod'), p21f)
 
-Parameter('p20f', 1e-2)
-Parameter('p21f', 1e-3)
-Parameter('p22f', 1e-3)
-Parameter('p22r', 1e-6)
+
+Parameter('p22f', 1e-6)
 Parameter('p23f', 1)
+Parameter('p24f', 1e-6)
+Parameter('p24r', 1e-3)
+Parameter('p25f', 1e-6)
 
 Rule('bind_FADDANYANYflip_LANYproC8ANY_RIP1unmod', RIP1(bscf = None, bub1 = None, bub2 = None, bub3 = None, bDD=None, btraf=None, bMLKL = None, bRHIM = 5, state = 'deub')% RIP3(bRHIM=5, bDD = None, state='unmod')
-     >> RIP1(bscf = None, bub1 = None, bub2 = None, bub3 = None, bDD=None, btraf=None, bMLKL = None, bRHIM = 5, state = 'deub')% RIP3(bRHIM=5, bDD = None, state='po4'), p20f)
+     >> RIP1(bscf = None, bub1 = None, bub2 = None, bub3 = None, bDD=None, btraf=None, bMLKL = None, bRHIM = 5, state = 'deub')% RIP3(bRHIM=5, bDD = None, state='po4'), p22f)
 
 Rule('Rip1_PO4lation', RIP1(bscf = None, bub1 = None, bub2 = None, bub3 = None, bDD=None, btraf=None, bMLKL = None, bRHIM = 5, state = 'deub')% RIP3(bRHIM=5, bDD = None, state='po4')
-     >> RIP1(bscf = None, bub1 = None, bub2 = None, bub3 = None, bDD=None, btraf=None, bMLKL = None, bRHIM = 5, state = 'po4')% RIP3(bRHIM=5, bDD = None, state='po4'), p21f)
+     >> RIP1(bscf = None, bub1 = None, bub2 = None, bub3 = None, bDD=None, btraf=None, bMLKL = None, bRHIM = 5, state = 'po4')% RIP3(bRHIM=5, bDD = None, state='po4'), p23f)
 
 Rule('bind_RIP1po4_MLKLunmod_to_RIP1po4MLKLunmod', RIP1(bscf = None, bub1 = None, bub2 = None, bub3 = None, bDD=None, btraf=None, bMLKL = None, bRHIM = 5, state = 'po4')% RIP3(bRHIM=5, bDD = None, state='po4') + MLKL(bRHIM=None, state='unmod')
-     | RIP1(bscf = None, bub1 = None, bub2 = None, bub3 = None, bDD=None, btraf=None, bMLKL = None, bRHIM = 5, state = 'po4')% RIP3(bRHIM=5, bDD = 1, state='po4') % MLKL(bRHIM=1, state='unmod'), p22f,p22r)
+     | RIP1(bscf = None, bub1 = None, bub2 = None, bub3 = None, bDD=None, btraf=None, bMLKL = None, bRHIM = 5, state = 'po4')% RIP3(bRHIM=5, bDD = 1, state='po4') % MLKL(bRHIM=1, state='unmod'), p24f,p24r)
 
 Rule('catalyze_RIP1po4MLKLunmod_to_RIP1po4_MLKLactive', RIP1(bscf = None, bub1 = None, bub2 = None, bub3 = None, bDD=None, btraf=None, bMLKL = None, bRHIM = 5, state = 'po4')% RIP3(bRHIM=5, bDD = 1, state='po4') % MLKL(bRHIM=1, state='unmod')
-     >>  MLKL(bRHIM=None, state='active') + RIP1(bscf = None, bub1 = None, bub2 = None, bub3 = None, bDD=None, btraf=None, bMLKL = None, bRHIM = 5, state = 'po4')% RIP3(bRHIM=5, bDD = None, state='po4') , p23f)
+     >>  MLKL(bRHIM=None, state='active') + RIP1(bscf = None, bub1 = None, bub2 = None, bub3 = None, bDD=None, btraf=None, bMLKL = None, bRHIM = 5, state = 'po4')% RIP3(bRHIM=5, bDD = None, state='po4') , p25f)
 
 
 Observable('MLKLa_obs', MLKL(bRHIM=None, state='active'))
 
 generate_equations(model)
+# print(len(model.initial_conditions))
+# print(len(model.parameters_rules()))
 #
 # pars = np.load('optimizer_best_100_100_9_18_necromulti_pso3.npy')
 # # # pars =  np.load('optimizer_best_1000_mar7.npy')
