@@ -67,8 +67,8 @@ rate_params = model.parameters_rules() # these are only the parameters involved 
 param_values = np.array([p.value for p in model.parameters]) # these are all the parameters
 rate_mask = np.array([p in rate_params for p in model.parameters])  # this picks the element of intersection
 
-y100_data = norm(loc=y100, scale = 0.5)
-y10_data = norm(loc = y10, scale = 0.5)
+y100_data = norm(loc=y100, scale = 0.05)
+y10_data = norm(loc = y10, scale = 0.05)
 
 
 
@@ -341,80 +341,145 @@ sampled_params_list.append(sp_p25f)
 # sp_p23f = SampledParam(norm, loc=np.log10(4.278903), scale=3.0)
 # sampled_params_list.append(sp_p23f)
 
-# plt.figure()
-# sns.distplot(sp_p1f, fit=norm, kde=False)
-# plt.show()
-# quit()
 
 # sampled_params_list = sampled_params_list
+#Starting arrays from PSO output for each chain
 pso0 = np.load('optimizer_best_100_100_9_20_necromulti_pso0.npy')
 pso1 = np.load('optimizer_best_100_100_9_20_necromulti_pso1.npy')
 pso2 = np.load('optimizer_best_100_100_9_20_necromulti_pso2.npy')
 pso3 = np.load('optimizer_best_100_100_9_20_necromulti_pso3.npy')
 pso4 = np.load('optimizer_best_100_100_9_20_necromulti_pso4.npy')
 startvals = [pso0, pso1, pso2, pso3, pso4]
-# quit()
 
-converged = False
-sampled_params, log_ps = run_dream(parameters=sampled_params_list,
-                                   likelihood=likelihood,
-                                   niterations=niterations,
-                                   nchains=nchains,
-                                   start= startvals,
-                                   multitry=True,
-                                   gamma_levels=4,
-                                   adapt_gamma=True,
-                                   history_thin=1,
-                                   model_name='dreamzs_5chain',
-                                   verbose=True)
+# converged = False
+# sampled_params, log_ps = run_dream(parameters=sampled_params_list,
+#                                    likelihood=likelihood,
+#                                    niterations=niterations,
+#                                    nchains=nchains,
+#                                    start= startvals,
+#                                    multitry=True,
+#                                    gamma_levels=4,
+#                                    adapt_gamma=True,
+#                                    history_thin=1,
+#                                    model_name='dreamzs_5chain',
+#                                    verbose=True)
+#
+# total_iterations = niterations
+# # Save sampling output (sampled parameter values and their corresponding logps).
+# for chain in range(len(sampled_params)):
+#     np.save('dreamzs_5chain_sampled_params_chain_922_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
+#     np.save('dreamzs_5chain_logps_chain_922_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
+# GR = Gelman_Rubin(sampled_params)
+# print('At iteration: ',total_iterations,' GR = ',GR)
+# np.savetxt('dreamzs_5chain_GelmanRubin_iteration_922_'+str(total_iterations)+'.txt', GR)
+# old_samples = sampled_params
+# if np.any(GR>1.2):
+#     starts = [sampled_params[chain][-1, :] for chain in range(nchains)]
+#     while not converged:
+#         total_iterations += niterations
+#         sampled_params, log_ps = run_dream(parameters=sampled_params_list,
+#                                            likelihood=likelihood,
+#                                            niterations=niterations,
+#                                            nchains=nchains,
+#                                            start=starts,
+#                                            multitry=True,
+#                                            gamma_levels=4,
+#                                            adapt_gamma=True,
+#                                            history_thin=1,
+#                                            model_name='dreamzs_5chain',
+#                                            verbose=False,
+#                                            restart=True)
+#         for chain in range(len(sampled_params)):
+#             np.save('dreamzs_5chain_sampled_params_chain_922_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
+#             np.save('dreamzs_5chain_logps_chain_922_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
+#         old_samples = [np.concatenate((old_samples[chain], sampled_params[chain])) for chain in range(nchains)]
+#         GR = Gelman_Rubin(old_samples)
+#         print('At iteration: ',total_iterations,' GR = ',GR)
+#         np.savetxt('dreamzs_5chain_GelmanRubin_iteration_922_' + str(total_iterations)+'.txt', GR)
+#         if np.all(GR<1.2):
+#             converged = True
+# try:
+#     #Plot output
+#     import seaborn as sns
+#     from matplotlib import pyplot as plt
+#     total_iterations = len(old_samples[0])
+#     burnin = total_iterations/2
+#     #samples = np.concatenate((old_samples[0][burnin:, :], old_samples[1][burnin:, :], old_samples[2][burnin:, :],old_samples[3][burnin:, :], old_samples[4][burnin:, :]))
+#     samples = np.concatenate(tuple([old_samples[i][int(burnin):, :] for i in range(nchains)]))
+#     ndims = len(sampled_params_list)
+#     colors = sns.color_palette(n_colors=ndims)
+#     for dim in range(ndims):
+#         fig = plt.figure()
+#         sns.distplot(samples[:, dim], color=colors[dim], norm_hist=True)
+#     fig.savefig('fig_PyDREAM_dimension_922_'+str(dim))
+# except ImportError:
+#     pass
 
-total_iterations = niterations
-# Save sampling output (sampled parameter values and their corresponding logps).
-for chain in range(len(sampled_params)):
-    np.save('dreamzs_5chain_sampled_params_chain_922_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
-    np.save('dreamzs_5chain_logps_chain_922_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
-GR = Gelman_Rubin(sampled_params)
-print('At iteration: ',total_iterations,' GR = ',GR)
-np.savetxt('dreamzs_5chain_GelmanRubin_iteration_922_'+str(total_iterations)+'.txt', GR)
-old_samples = sampled_params
-if np.any(GR>1.2):
-    starts = [sampled_params[chain][-1, :] for chain in range(nchains)]
-    while not converged:
-        total_iterations += niterations
-        sampled_params, log_ps = run_dream(parameters=sampled_params_list,
-                                           likelihood=likelihood,
-                                           niterations=niterations,
-                                           nchains=nchains,
-                                           start=starts,
-                                           multitry=True,
-                                           gamma_levels=4,
-                                           adapt_gamma=True,
-                                           history_thin=1,
-                                           model_name='dreamzs_5chain',
-                                           verbose=False,
-                                           restart=True)
-        for chain in range(len(sampled_params)):
-            np.save('dreamzs_5chain_sampled_params_chain_922_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
-            np.save('dreamzs_5chain_logps_chain_922_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
-        old_samples = [np.concatenate((old_samples[chain], sampled_params[chain])) for chain in range(nchains)]
-        GR = Gelman_Rubin(old_samples)
-        print('At iteration: ',total_iterations,' GR = ',GR)
-        np.savetxt('dreamzs_5chain_GelmanRubin_iteration_922_' + str(total_iterations)+'.txt', GR)
-        if np.all(GR<1.2):
-            converged = True
-try:
-    #Plot output
-    import seaborn as sns
-    from matplotlib import pyplot as plt
-    total_iterations = len(old_samples[0])
-    burnin = total_iterations/2
-    #samples = np.concatenate((old_samples[0][burnin:, :], old_samples[1][burnin:, :], old_samples[2][burnin:, :],old_samples[3][burnin:, :], old_samples[4][burnin:, :]))
-    samples = np.concatenate(tuple([old_samples[i][int(burnin):, :] for i in range(nchains)]))
-    ndims = len(sampled_params_list)
-    colors = sns.color_palette(n_colors=ndims)
-    for dim in range(ndims):
-        fig = plt.figure()
-        sns.distplot(samples[:, dim], color=colors[dim], norm_hist=True)
-    fig.savefig('fig_PyDREAM_dimension_922_'+str(dim))
-except ImportError:
-    pass
+if __name__ == '__main__':
+
+    # Run DREAM sampling.  Documentation of DREAM options is in Dream.py.
+    converged = False
+    total_iterations = niterations
+    sampled_params, log_ps = run_dream(parameters=sampled_params_list, likelihood=likelihood,
+                                       niterations=niterations, nchains=nchains, multitry=False,
+                                       gamma_levels=4, adapt_gamma=True, history_thin=1,
+                                       model_name='necro_smallest_dreamzs925_5chain', verbose=True)
+
+    # Save sampling output (sampled parameter values and their corresponding logps).
+    for chain in range(len(sampled_params)):
+        np.save('necro_smallest_dreamzs_5chain_sampled_params_chain925_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
+        np.save('necro_smallest_dreamzs_5chain_logps_chain925_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
+
+    #Check convergence and continue sampling if not converged
+
+    GR = Gelman_Rubin(sampled_params)
+    print('At iteration: ',total_iterations,' GR = ',GR)
+    np.savetxt('necro_smallest_dreamzs_5chain925_GelmanRubin_iteration_'+str(total_iterations)+'.txt', GR)
+
+    old_samples = sampled_params
+    if np.any(GR>1.2):
+        starts = [sampled_params[chain][-1, :] for chain in range(nchains)]
+        while not converged:
+            total_iterations += niterations
+            sampled_params, log_ps = run_dream(parameters=sampled_params_list, likelihood=likelihood,
+                                               niterations=niterations, nchains=nchains, start=starts, multitry=False, gamma_levels=4,
+                                               adapt_gamma=True, history_thin=1, model_name='necro_smallest_dreamzs924_5chain',
+                                               verbose=True, restart=True)
+
+
+            # Save sampling output (sampled parameter values and their corresponding logps).
+            for chain in range(len(sampled_params)):
+                np.save('necro_smallest_dreamzs925_5chain_sampled_params_chain_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
+                np.save('necro_smallest_dreamzs925_5chain_logps_chain_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
+
+            old_samples = [np.concatenate((old_samples[chain], sampled_params[chain])) for chain in range(nchains)]
+            GR = Gelman_Rubin(old_samples)
+            print('At iteration: ',total_iterations,' GR = ',GR)
+            np.savetxt('necro_smallest_dreamzs925_5chain_GelmanRubin_iteration_' + str(total_iterations)+'.txt', GR)
+
+            if np.all(GR<1.2):
+                converged = True
+
+    try:
+        #Plot output
+        import seaborn as sns
+        from matplotlib import pyplot as plt
+        total_iterations = len(old_samples[0])
+        burnin = total_iterations/2
+        samples = np.concatenate(tuple([old_samples[i][int(burnin):, :] for i in range(nchains)]))
+
+        ndims = len(sampled_params_list)
+        colors = sns.color_palette(n_colors=ndims)
+        for dim in range(ndims):
+            fig = plt.figure()
+            sns.distplot(samples[:, dim], color=colors[dim], norm_hist=True)
+            fig.savefig('PyDREAM_necro925_smallest_dimension_'+str(dim))
+
+    except ImportError:
+        pass
+
+else:
+
+    run_kwargs = {'parameters':sampled_params_list, 'likelihood':likelihood, 'niterations':niterations, 'nchains':nchains, \
+                  'multitry':False, 'gamma_levels':4, 'adapt_gamma':True, 'history_thin':1, 'model_name':'necro_smallest_dreamzs924_5chain', 'verbose':False}
+

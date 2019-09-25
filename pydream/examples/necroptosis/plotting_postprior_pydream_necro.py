@@ -15,21 +15,21 @@ idx = list(range(14, 54,1)) #index for parameter values after initial conditions
 counter = 0
 
 #CHAINS
-chain0 = np.load('dreamzs_5chain_sampled_params_chain_919_0_50000.npy')
-chain1 = np.load('dreamzs_5chain_sampled_params_chain_919_1_50000.npy')
-chain2 = np.load('dreamzs_5chain_sampled_params_chain_919_2_50000.npy')
-chain3 = np.load('dreamzs_5chain_sampled_params_chain_919_3_50000.npy')
-chain4 = np.load('dreamzs_5chain_sampled_params_chain_919_4_50000.npy')
+chain0 = np.load('dreamzs_5chain_sampled_params_chain_922_0_50000.npy')
+chain1 = np.load('dreamzs_5chain_sampled_params_chain_922_1_50000.npy')
+chain2 = np.load('dreamzs_5chain_sampled_params_chain_922_2_50000.npy')
+chain3 = np.load('dreamzs_5chain_sampled_params_chain_922_3_50000.npy')
+chain4 = np.load('dreamzs_5chain_sampled_params_chain_922_4_50000.npy')
 
-logps = np.load('dreamzs_5chain_logps_chain_919_4_50000.npy')
-print(logps)
-quit()
+logps = np.load('dreamzs_5chain_logps_chain_922_4_50000.npy')
+# print(logps)
+# quit()
 
 total_iterations = chain0.shape[0]
 burnin = int(total_iterations/2)
 samples = np.concatenate((chain0[burnin:, :], chain1[burnin:, :], chain2[burnin:, :], chain3[burnin:, :], chain4[burnin:, :]))
-print(10 ** samples[:2])
-quit()
+# print(10 ** samples[:2])
+# quit()
 samples_nonlog = 10 ** samples
 ndims = len(idx)
 

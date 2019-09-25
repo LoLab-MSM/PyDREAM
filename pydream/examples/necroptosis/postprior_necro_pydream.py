@@ -142,6 +142,15 @@ p2chain4 = np.load('pydream_wvar_7_4_50000/p2newdreamzs_5chain_sampled_params_ch
 # quit()
 # samples = np.concatenate(tuple([chain0, chain1, chain2]))
 
+#CHAINS
+logn0 = np.load('dreamzs_5chain_logps_chain_922_0_50000.npy')
+logn1 = np.load('dreamzs_5chain_logps_chain_922_1_50000.npy')
+logn2 = np.load('dreamzs_5chain_logps_chain_922_2_50000.npy')
+logn3 = np.load('dreamzs_5chain_logps_chain_922_3_50000.npy')
+logn4 = np.load('dreamzs_5chain_logps_chain_922_4_50000.npy')
+
+
+
 total_iterations = chain0.shape[0]
 iterations = logps0.shape[0]
 burnin = int(total_iterations/2)
@@ -173,14 +182,25 @@ priors_nonlog = 10 ** priors
 #
 iters = [i for i in range(50000)]
 plt.figure()
-plt.plot(iters, logps0[:,0], color = 'b')
-# plt.plot(iters, logps1[:,0], color = 'red')
-# plt.plot(iters, logps2[:,0], color = 'k')
-# plt.plot(iters, logps3[:,0], color = 'g') #best
-# plt.plot(iters, logps4[:,0], color = 'cyan')
-plt.xlabel("Iteration", fontsize=14)
-plt.ylabel("Likelihood", fontsize=14, labelpad=15)
+plt.plot(iters, logn0[:,0], color = 'b')
+# plt.figure()
+plt.plot(iters, logn1[:,0], color = 'red')
+# plt.xlabel("Iteration", fontsize=14)
+# plt.ylabel("Likelihood", fontsize=14, labelpad=15)
+# plt.figure()
+plt.plot(iters, logn2[:,0], color = 'k')
+# plt.xlabel("Iteration", fontsize=14)
+# plt.ylabel("Likelihood", fontsize=14, labelpad=15)
+# plt.figure()
+plt.plot(iters, logn3[:,0], color = 'g') #best
+# plt.xlabel("Iteration", fontsize=14)
+# plt.ylabel("Likelihood", fontsize=14, labelpad=15)
+# plt.figure()
+plt.plot(iters, logn4[:,0], color = 'cyan')
+# plt.xlabel("Iteration", fontsize=14)
+# plt.ylabel("Likelihood", fontsize=14, labelpad=15)
 plt.show()
+quit()
 # quit()
 # print(priors)
 # np.save('allchains50000neww.npy', priors)
