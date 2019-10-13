@@ -43,7 +43,7 @@ Monomer('LUBAC', ['brip'])
 # Parameter('C8_0', 9000)
 # Parameter('RIP3_0', 40000)
 
-Parameter('TNF_0', 2326)
+Parameter('TNF_0', 233)
 Parameter('TNFR_0', 4800)
 Parameter('TRADD_0', 4696) #4696
 Parameter('RIP1_0', 40000)
