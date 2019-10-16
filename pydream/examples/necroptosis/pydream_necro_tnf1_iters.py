@@ -41,6 +41,6 @@ obs_y_range = ['MLKLa_obs']
 t = np.array([0, 30, 90, 270, 480, 600, 720, 840, 960])
 tspan = np.linspace(0, 1440, 11)
 solver100 = ScipyOdeSimulator(model, tspan=t, verbose = True)
-result100 = solver100.run(initials= {TNF(brec=None):23}, param_values=all_pars[:24999], num_processors=20)
+result100 = solver100.run(param_values=all_pars[:24999], num_processors=20)
 df = result100.dataframe
 result100.save('necro_25000params_TNF1_pydream_5chns.h5')
