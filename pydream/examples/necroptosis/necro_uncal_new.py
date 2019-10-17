@@ -43,7 +43,7 @@ Monomer('LUBAC', ['brip'])
 # Parameter('C8_0', 9000)
 # Parameter('RIP3_0', 40000)
 
-Parameter('TNF_0', 2)
+Parameter('TNF_0', 2326)
 Parameter('TNFR_0', 4800)
 Parameter('TRADD_0', 4696) #4696
 Parameter('RIP1_0', 40000)
@@ -235,6 +235,26 @@ Rule('catalyze_RIP1po4MLKLunmod_to_RIP1po4_MLKLactive', RIP1(bscf = None, bub1 =
 
 
 Observable('MLKLa_obs', MLKL(bRHIM=None, state='active'))
+Observable('CII_C8a_obs', TRADD(brec = None, brip = 3, bDD1=None, bDD2=None) % RIP1(bscf=3, btraf=None, bub1=None, bub2=None, bub3=None,bDD = 1,bRHIM=None,bMLKL=None, state='deub') %
+           FADD(bDD=1,bDED1 = 2, bDED2 = None) % C8(bf=2,flip = 4, state='A') % flip_L(bDED=4, state = 'A'))
+Observable('CII_RIP3_obs', TRADD(brec = None, brip = 3, bDD1=None, bDD2=None) % RIP1(bscf=3, btraf=None, bub1=None, bub2=None, bub3=None,bDD = 1,bRHIM=5,bMLKL=None, state='deub')
+           % FADD(bDD=1,bDED1 = None, bDED2 = None) % RIP3(bRHIM=5, bDD = None, state='unmod'))
+Observable('RIP1RIP3unmod_obs', RIP1(bscf = None, bub1 = None, bub2 = None, bub3 = None, bDD=None, btraf=None, bMLKL = None, bRHIM = 5, state = 'po4')% RIP3(bRHIM=5, bDD = 1, state='po4') % MLKL(bRHIM=1, state='unmod'))
+Observable('CI_k63_obs', TNF(brec = 1) % TNFR(blig=1, brip=2) % TRADD(brec = 2, brip = 3, bDD1=None, bDD2=None) % RIP1(bscf=3, btraf=4, bub1=None, bub2=None, bub3=None,bDD = None,bRHIM=None,bMLKL=None, state='K63ub')
+           % TRAF(brip=4, bciap=5, bcyld =None, state='unmod') % cIAP(btraf = 5))
+Observable('CII_RIP1deub_obs', TRADD(brec = None, brip = 3, bDD1=None, bDD2=None) % RIP1(bscf=3, btraf=None, bub1=None, bub2=None, bub3=None,bDD = 1,bRHIM=None,bMLKL=None, state='deub')
+           % FADD(bDD=1,bDED1 = None, bDED2 = None))
+Observable('A20_CI_obs', TNF(brec = 1) % TNFR(blig=1, brip=2) % TRADD(brec = 2, brip = 3, bDD1=None, bDD2=None) % RIP1(bscf=3, btraf=4, bub1=6, bub2=7, bub3=None,bDD = None,bRHIM=None,bMLKL=None, state='K63ub')
+           % TRAF(brip=4, bciap=5, bcyld =None, state='unmod') % cIAP(btraf = 5) % LUBAC(brip = 6) % A20(brip=7))
+Observable('CYLD_CI_obs', TNF(brec = 1) % TNFR(blig=1, brip=2) % TRADD(brec = 2, brip = 3, bDD1=None, bDD2=None) % RIP1(bscf=3, btraf=4, bub1=6, bub2=7, bub3=None,bDD = None,bRHIM=None,bMLKL=None, state='K63ub')
+           % TRAF(brip=4, bciap=5, bcyld =None, state='unmod') % cIAP(btraf = 5) % LUBAC(brip = 6) % CYLD(brip=7))
+# Observable('C8_obs', )
+Observable('C8Flip_obs', C8(bf=None,flip = 4, state='A') % flip_L(bDED=4, state = 'A'))
+Observable('RIP1TRADD_obs',  TRADD(brec = None, brip = 3, bDD1=None, bDD2=None) % RIP1(bscf=3, btraf=None, bub1=None, bub2=None, bub3=None,bDD = None,bRHIM=None,bMLKL=None, state='deub'))
+Observable('RIP1k63_obs', RIP1(state='K63ub'))
+Observable('RIP1deub_obs', RIP1(state='deub'))
+Observable('RIP1trunc_obs', RIP1(state='trunc'))
+Observable('Flip_obs', flip_L(bDED=None, state = 'A'))
 
 generate_equations(model)
 # print(len(model.initial_conditions))
