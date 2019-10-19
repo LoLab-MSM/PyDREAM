@@ -56,7 +56,7 @@ Parameter('flip_L_0', 3900) #3900
 Parameter('Lubac_0', 7226)
 Parameter('C8_0', 3799) #3799
 Parameter('RIP3_0', 10654) #10654
-Parameter('MLKLa_0', 5544) #5544
+Parameter('MLKLa_0', 25544) #5544
 
 
 Initial(TNF(brec=None), TNF_0)

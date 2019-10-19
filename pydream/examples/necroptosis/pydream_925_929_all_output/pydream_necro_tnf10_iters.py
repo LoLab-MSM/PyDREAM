@@ -13,6 +13,7 @@ from pysb.simulator import ScipyOdeSimulator
 from necro_uncal_new import model
 import pandas as pd
 import h5py
+alias_model_components(model)
 
 chain0 = np.load('necro_smallest_dreamzs_5chain_sampled_params_chain925_0_50000.npy')
 chain1 = np.load('necro_smallest_dreamzs_5chain_sampled_params_chain925_1_50000.npy')
@@ -22,10 +23,11 @@ chain4 = np.load('necro_smallest_dreamzs_5chain_sampled_params_chain925_4_50000.
 
 total_iterations = chain0.shape[0]
 burnin = int(total_iterations/2)
-samples = np.concatenate((chain0[burnin:, :], chain1[burnin:, :], chain2[burnin:, :], chain3[burnin:, :], chain4[burnin:, :]))
-np.save('necro_pydream_5chns_929_tnf10.npy', samples)
+samples = np.concatenate((chain0[burnin:30000, :], chain1[burnin:30000, :], chain2[burnin:30000, :], chain3[burnin:30000, :], chain4[burnin:30000, :]))
+np.save('necro_pydream_5chns_929_10tnf.npy', samples)
 
-par_files = np.load('necro_pydream_5chns_929_tnf10.npy')
+
+par_files = np.load('necro_pydream_5chns_929_10tnf.npy')
 n_pars = len(par_files)
 all_pars = np.zeros((n_pars, len(model.parameters)))
 
@@ -38,10 +40,12 @@ for i in range(n_pars):
     param_values[rate_mask] = 10 ** par
     all_pars[i] = param_values
 obs_y_range = ['MLKLa_obs']
+
+
 tnf = [233]
 t = np.array([0, 30, 90, 270, 480, 600, 720, 840, 960])
-tspan = np.linspace(0, 1440, 11)
-solver100 = ScipyOdeSimulator(model, tspan=t, verbose = True)
-result100 = solver100.run(param_values=all_pars[:24999], num_processors=20)
+tspan = np.linspace(0, 1440, 100)
+solver100 = ScipyOdeSimulator(model, tspan=tspan, verbose = True)
+result100 = solver100.run(initials= {TNF(brec=None): tnf}, param_values=all_pars[:], num_processors=20)
 df = result100.dataframe
-result100.save('necro_25000params_TNF10_pydream_5chns.h5')
+result100.save('necro_25000params_10TNF_pydream_5chns.h5')
