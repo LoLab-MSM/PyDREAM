@@ -46,7 +46,7 @@ Monomer('LUBAC', ['brip'])
 Parameter('TNF_0', 2326)
 Parameter('TNFR_0', 4800)
 Parameter('TRADD_0', 4696) #4696
-Parameter('RIP1_0', 40000)
+Parameter('RIP1_0', 12000)
 Parameter('TRAF_0', 11776) #11776
 Parameter('cIAP_0', 9000) #9000
 Parameter('A20_0', 9000)
@@ -56,7 +56,7 @@ Parameter('flip_L_0', 3900) #3900
 Parameter('Lubac_0', 7226)
 Parameter('C8_0', 3799) #3799
 Parameter('RIP3_0', 10654) #10654
-Parameter('MLKLa_0', 25544) #5544
+Parameter('MLKLa_0', 5544) #5544
 
 
 Initial(TNF(brec=None), TNF_0)
