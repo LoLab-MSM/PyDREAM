@@ -63,7 +63,8 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
     
     else:
     
-        if type(start) is list:
+        if (type(start) is list
+                or isinstance(start, np.ndarray) and start.ndim == 2):
             args = zip([step_instance]*nchains, [niterations]*nchains, start, [verbose]*nchains, [nverbose]*nchains)
 
         else:
