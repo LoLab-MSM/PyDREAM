@@ -157,7 +157,7 @@ class Dream():
         self.last_logp = None
 
         #Set the number of seedchains to 10*dimensions to fit
-        if self.nseedchains == None:
+        if self.nseedchains is None:
             self.nseedchains = self.total_var_dimension*10
 
         #Set array of gamma values (decreasing step size with increasing level)
@@ -228,7 +228,7 @@ class Dream():
         
         try:
 
-            if last_loglike != None:
+            if last_loglike is not None:
                 self.last_like = last_loglike
                 self.last_prior = last_logprior
                 self.last_logp = T*self.last_like + self.last_prior
@@ -254,7 +254,7 @@ class Dream():
                 else:
                     proposed_pts, snooker_logp_prop, z = self.generate_proposal_points(self.multitry, q0, CR, DEpair_choice, gamma_level, snooker=True)                 
                     
-            if self.last_logp == None:
+            if self.last_logp is None:
                 self.last_prior, self.last_like = self.logp(q0)
                 self.last_logp = T*self.last_like + self.last_prior
             
@@ -424,11 +424,11 @@ class Dream():
             accepted point in parameter space
         """
         
-        if self.nchains == None:
+        if self.nchains is None:
             current_positions = np.frombuffer(Dream_shared_vars.current_positions.get_obj())
             self.nchains = len(current_positions)//ndimensions
         
-        if self.chain_n == None:
+        if self.chain_n is None:
             with Dream_shared_vars.nchains.get_lock():
                 self.chain_n = Dream_shared_vars.nchains.value-1
                 Dream_shared_vars.nchains.value -= 1

@@ -40,7 +40,7 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
         """
 
     if restart:
-        if start == None:
+        if start is None:
             raise Exception('Restart run specified but no start positions given.')
         if 'model_name' not in kwargs:
             raise Exception('Restart run specified but no model name to load history and crossover value files from given.')
@@ -215,7 +215,7 @@ def _sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose):
                     naccepts[i] += 1
                     naccepts100win[i] += 1
             except TypeError:
-                #On first iteration without starting points this will fail because q0 == None
+                #On first iteration without starting points this will fail because q0 is None
                 pass
             
         args = list(zip(dream_instances, qnews, T, loglikenews, logprinews))
@@ -280,10 +280,10 @@ def _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=None):
     n = mp.Value('i', 0)
     tf = mp.Value('c', b'F')
     
-    if step_instance.crossover_burnin == None:
+    if step_instance.crossover_burnin is None:
         step_instance.crossover_burnin = int(np.floor(niterations/10))
         
-    if start_pt != None:
+    if start_pt is not None:
         if step_instance.start_random:
             print('Warning: start position provided but random_start set to True.  Overrode random_start value and starting walk at provided start position.')
             step_instance.start_random = False
