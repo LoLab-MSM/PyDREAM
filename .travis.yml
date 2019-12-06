@@ -9,12 +9,11 @@ before_install:
 - export PATH="/home/travis/miniconda/bin:$PATH"
 - conda update --yes conda
 - conda install --yes -c conda-forge -c alubbock python="$PYVER" numpy scipy nose pysb
+- pip install python-dateutil
+- pip install -r requirements.txt
 # Install pydream
 install:
-  - pip install python-dateutil
   - pip install .
-  - pip install https://github.com/LoLab-VU/pysb/archive/master.zip
-  - pip install -r requirements.txt
 # command to run tests
 script:
   - travis_wait 30 nosetests
