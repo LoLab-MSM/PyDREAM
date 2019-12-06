@@ -1,17 +1,15 @@
 language: python
+env:
+- PYVER=2.7
 before_install:
 #using miniconda to get around Travis scipy problems
-- wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+- wget http://repo.continuum.io/miniconda/Miniconda${PYVER:0:1}-latest-Linux-x86_64.sh -O miniconda.sh
 - chmod +x miniconda.sh
 - bash miniconda.sh -b -p $HOME/miniconda
 - export PATH="/home/travis/miniconda/bin:$PATH"
 - conda update --yes conda
-- conda install --yes python="$TRAVIS_PYTHON_VERSION" numpy scipy nose
-#Install BioNetGen for PySB
-- wget "http://www.csb.pitt.edu/Faculty/Faeder/wp-content/uploads/2017/04/BioNetGen-2.2.6-stable_Linux.tar.gz"
-    -O BioNetGen-2.2.6-stable.tar.gz
-- tar xzf BioNetGen-2.2.6-stable.tar.gz
-- export BNGPATH=`pwd`/BioNetGen-2.2.6-stable
+- conda install --yes -c conda-forge python="$PYVER" numpy scipy nose
+# Install pydream
 install:
   - pip install python-dateutil
   - pip install .
