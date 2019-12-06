@@ -8,7 +8,7 @@ before_install:
 - bash miniconda.sh -b -p $HOME/miniconda
 - export PATH="/home/travis/miniconda/bin:$PATH"
 - conda update --yes conda
-- conda install --yes -c conda-forge -c alubbock python="$PYVER" numpy scipy nose pysb
+- conda install --yes -c conda-forge -c alubbock python="$PYVER" numpy scipy nose pysb weave
 # Install pydream
 install:
   - pip install python-dateutil
