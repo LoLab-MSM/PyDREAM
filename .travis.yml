@@ -1,6 +1,8 @@
 language: python
 env:
 - PYVER=2.7
+- PYVER=3.6
+- PYVER=3.7
 before_install:
 #using miniconda to get around Travis scipy problems
 - wget http://repo.continuum.io/miniconda/Miniconda${PYVER:0:1}-latest-Linux-x86_64.sh -O miniconda.sh

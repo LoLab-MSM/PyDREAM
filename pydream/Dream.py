@@ -195,14 +195,14 @@ class Dream():
                     if not self.history_file:
                         if self.verbose:
                             print('History file not loaded.')
-                        if Dream_shared_vars.history_seeded.value == 'F':
+                        if Dream_shared_vars.history_seeded.value == b'F':
                             if self.verbose:
                                 print('Seeding history with ',self.nseedchains,' draws from prior.')
                             for i in range(self.nseedchains):
                                 start_loc = i*self.total_var_dimension
                                 end_loc = start_loc+self.total_var_dimension
                                 Dream_shared_vars.history[start_loc:end_loc] = self.draw_from_prior(self.variables)
-                            Dream_shared_vars.history_seeded.value = 'T'
+                            Dream_shared_vars.history_seeded.value = b'T'
                     else:
                         if self.verbose:
                             print('History file loaded.')
