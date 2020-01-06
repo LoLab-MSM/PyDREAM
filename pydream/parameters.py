@@ -66,8 +66,11 @@ class FlatParam(SampledParam):
 
     def interval(self, alpha=1):
         """Return the interval for a given alpha value."""
-
-        lower = [-np.inf] * self.dsize
-        upper = [np.inf] * self.dsize
+        if self.dsize == 1:
+            lower = -np.inf
+            upper = np.inf
+        else:
+            lower = [-np.inf] * self.dsize
+            upper = [np.inf] * self.dsize
         return [lower, upper]
         
