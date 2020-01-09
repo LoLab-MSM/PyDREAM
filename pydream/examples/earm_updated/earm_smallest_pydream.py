@@ -9,7 +9,7 @@ from pydream.convergence import Gelman_Rubin
 from pydream.core import run_dream
 import os
 
-pars = np.load('optimizer_best_25_500_earm_newstart.npy')[0]
+# pars = np.load('optimizer_best_25_500_earm_newstart.npy')[0]
 
 # load experimental data
 # exp_data = pd.read_csv('EC-RP_IMS-RP_IC-RP_data_for_models.csv', index_col=False)
@@ -44,10 +44,10 @@ like_mbid = norm(loc=exp_data['norm_IC-RP'], scale=exp_data['nrm_var_IC-RP'])
 like_momp = norm(loc=momp_data, scale=momp_var)
 
 
-sampled_parameter_names = [SampledParam(norm, loc=pars, scale=2)]
+# sampled_parameter_names = [SampledParam(norm, loc=pars, scale=2)]
 
-# sampled_parameter_names = [SampledParam(norm, loc=np.log10(pa), scale=2)
-#                            for pa in param_values[rate_mask]]
+sampled_parameter_names = [SampledParam(norm, loc=np.log10(pa), scale=2)
+                           for pa in param_values[rate_mask]]
 
 def likelihood(position):
     Y = np.copy(position)
@@ -97,6 +97,13 @@ def likelihood(position):
 nchains = 5
 niterations = 10000
 
+pso0 = np.load('optimizer_best_50_500_earm_newstart_10.npy')[0]
+pso1 = np.load('optimizer_best_50_500_earm_newstart_10.npy')[1]
+pso2 = np.load('optimizer_best_50_500_earm_newstart_10.npy')[2]
+pso3 = np.load('optimizer_best_50_500_earm_newstart_10.npy')[3]
+pso4 = np.load('optimizer_best_50_500_earm_newstart_10.npy')[4]
+startvals = [pso0, pso1, pso2, pso3, pso4]
+
 if __name__ == '__main__':
 
     # Run DREAM sampling.  Documentation of DREAM options is in Dream.py.
@@ -104,19 +111,19 @@ if __name__ == '__main__':
     total_iterations = niterations
     sampled_params, log_ps = run_dream(parameters=sampled_parameter_names, likelihood=likelihood,
                                        niterations=niterations, nchains=nchains, multitry=False,
-                                       gamma_levels=4, adapt_gamma=True, history_thin=1,
-                                       model_name='earm_smallest_dreamzs_5chain', verbose=True)
+                                       gamma_levels=4, adapt_gamma=True, history_thin=1, start=startvals,
+                                       model_name='earm_smallest_dreamzs_newstart_5chain', verbose=True)
 
     # Save sampling output (sampled parameter values and their corresponding logps).
     for chain in range(len(sampled_params)):
-        np.save('earm_smallest_dreamzs_5chain_sampled_params_chain_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
-        np.save('earm_smallest_dreamzs_5chain_logps_chain_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
+        np.save('earm_smallest_dreamzs_newstart_5chain_sampled_params_chain_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
+        np.save('earm_smallest_dreamzs_newstart_5chain_logps_chain_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
 
     #Check convergence and continue sampling if not converged
 
     GR = Gelman_Rubin(sampled_params)
     print('At iteration: ',total_iterations,' GR = ',GR)
-    np.savetxt('earm_smallest_dreamzs_5chain_GelmanRubin_iteration_'+str(total_iterations)+'.txt', GR)
+    np.savetxt('earm_smallest_dreamzs_newstart_5chain_GelmanRubin_iteration_'+str(total_iterations)+'.txt', GR)
 
     old_samples = sampled_params
     if np.any(GR>1.2):
@@ -125,19 +132,19 @@ if __name__ == '__main__':
             total_iterations += niterations
             sampled_params, log_ps = run_dream(parameters=sampled_parameter_names, likelihood=likelihood,
                                                niterations=niterations, nchains=nchains, start=starts, multitry=False, gamma_levels=4,
-                                               adapt_gamma=True, history_thin=1, model_name='earm_smallest_dreamzs_5chain',
+                                               adapt_gamma=True, history_thin=1, model_name='earm_smallest_dreamzs_newstart_5chain',
                                                verbose=True, restart=True)
 
 
             # Save sampling output (sampled parameter values and their corresponding logps).
             for chain in range(len(sampled_params)):
-                np.save('earm_smallest_dreamzs_5chain_sampled_params_chain_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
-                np.save('earm_smallest_dreamzs_5chain_logps_chain_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
+                np.save('earm_smallest_dreamzs_newstart_5chain_sampled_params_chain_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
+                np.save('earm_smallest_dreamzs_newstart_5chain_logps_chain_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
 
             old_samples = [np.concatenate((old_samples[chain], sampled_params[chain])) for chain in range(nchains)]
             GR = Gelman_Rubin(old_samples)
             print('At iteration: ',total_iterations,' GR = ',GR)
-            np.savetxt('earm_smallest_dreamzs_5chain_GelmanRubin_iteration_' + str(total_iterations)+'.txt', GR)
+            np.savetxt('earm_smallest_dreamzs_newstart_5chain_GelmanRubin_iteration_' + str(total_iterations)+'.txt', GR)
 
             if np.all(GR<1.2):
                 converged = True
@@ -157,7 +164,7 @@ if __name__ == '__main__':
         for dim in range(ndims):
             fig = plt.figure()
             sns.distplot(samples[:, dim], color=colors[dim], norm_hist=True)
-            fig.savefig('PyDREAM_earm_smallest_dimension_'+str(dim))
+            fig.savefig('PyDREAM_newstart_earm_smallest_dimension_'+str(dim))
 
     except ImportError:
         pass
@@ -165,4 +172,4 @@ if __name__ == '__main__':
 else:
 
     run_kwargs = {'parameters':sampled_parameter_names, 'likelihood':likelihood, 'niterations':niterations, 'nchains':nchains, \
-                  'multitry':False, 'gamma_levels':4, 'adapt_gamma':True, 'history_thin':1, 'model_name':'earm_smallest_dreamzs_5chain2', 'verbose':False}
+                  'multitry':False, 'gamma_levels':4, 'adapt_gamma':True, 'history_thin':1, 'model_name':'earm_smallest_dreamzs_newstart_5chain2', 'verbose':False}
