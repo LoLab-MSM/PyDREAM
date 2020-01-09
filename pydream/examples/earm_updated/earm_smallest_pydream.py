@@ -9,7 +9,7 @@ from pydream.convergence import Gelman_Rubin
 from pydream.core import run_dream
 import os
 
-pars = np.load('optimizer_best_25_500_earm_newstart.npy')
+pars = np.load('optimizer_best_25_500_earm_newstart.npy')[0]
 
 # load experimental data
 # exp_data = pd.read_csv('EC-RP_IMS-RP_IC-RP_data_for_models.csv', index_col=False)
