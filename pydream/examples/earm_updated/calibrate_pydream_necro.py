@@ -7,7 +7,7 @@ from pysb.simulator import ScipyOdeSimulator
 import numpy as np
 from pydream.parameters import SampledParam
 from pydream.convergence import Gelman_Rubin
-from scipy.stats import norm,uniform
+from scipy.stats import norm,uniform, halfnorm
 from necro_uncal_new import model
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -56,10 +56,13 @@ data100 = np.array([0., 0., 0., 0., 0.01, 0.05, 0.5, 0.99, 1.])
 # 0.56055140114867])
 
 x100 = np.array([30, 90, 270, 480, 600, 720, 840, 960])
-y100 = np.array([0.00885691708746097,0.0161886154261265,0.0373005242261882,0.2798939020159581,0.510, .7797294067, 0.95,1])
+y100_1 = np.array([0.00885691708746097,0.0161886154261265,0.0373005242261882])
+y100_2 = np.array([0.2798939020159581,0.510, .7797294067, 0.95,1])
 
 # x10 = np.array([.5, 1.5, 4.5, 8, 10, 12, 14, 16])
-y10 = np.array([0.0106013664572332,0.00519576571714913,0.02967443048221,0.050022163974868,0.108128107774737, 0.25,0.56055140114867, 0.77])
+y10_1 = np.array([0.0106013664572332,0.00519576571714913,0.02967443048221])
+y10_2 = np.array([0.050022163974868,0.108128107774737, 0.25,0.56055140114867, 0.77])
+
 solver = ScipyOdeSimulator(model, tspan=x100) #, rtol=1e-6, # rtol : float or sequence relative tolerance for solution
                             #atol=1e-6) #atol : float or sequence absolute tolerance for solution
 
@@ -67,12 +70,13 @@ rate_params = model.parameters_rules() # these are only the parameters involved 
 param_values = np.array([p.value for p in model.parameters]) # these are all the parameters
 rate_mask = np.array([p in rate_params for p in model.parameters])  # this picks the element of intersection
 
-y100_data = norm(loc=y100, scale = 0.05)
-y10_data = norm(loc = y10, scale = 0.05)
-
-
-
-
+y100_data1 = halfnorm(loc=y100_1, scale = 0.10)
+y100_data2 = norm(loc=y100_2, scale = 0.10)
+y10_data1 = halfnorm(loc = y10_1, scale = 0.10)
+y10_data2 = norm(loc = y10_2, scale = 0.10)
+y100_data = np.concatenate(y100_data1, y100_data2)
+print(y100_data)
+quit()
 def likelihood(position):
     params_tmp = np.copy(position)  # here you pass the parameter vector; the point of making a copy of it is in order not to modify it
     param_values[rate_mask] = 10 ** params_tmp  # see comment above *
@@ -101,6 +105,36 @@ def likelihood(position):
     # error = e1 + e2
 
     return logp_total
+
+
+# def likelihood(position):
+#     params_tmp = np.copy(position)  # here you pass the parameter vector; the point of making a copy of it is in order not to modify it
+#     param_values[rate_mask] = 10 ** params_tmp  # see comment above *
+#
+#     params_10 = np.copy(param_values)
+#     params_10[0] = 233
+#     pars = [param_values, params_10]
+#     result = solver.run(param_values=pars)
+#
+#     ysim_norm100 = normalize(result.observables[0]['MLKLa_obs'])
+#     ysim_norm10 = normalize(result.observables[1]['MLKLa_obs'])
+#     # result = solver.run(param_values=param_values)
+#     # ysim_norm = normalize(result.observables['MLKLa_obs'])
+#     # error = np.sum(((y100 - ysim_norm) ** 2))
+#
+#     logp_y100 = np.sum(y100_data.logpdf(ysim_norm100))
+#     logp_y10 = np.sum(y10_data.logpdf(ysim_norm10))
+#
+#     logp_total = logp_y100 + logp_y10
+#
+#     if np.isnan(logp_total):
+#         logp_total = -np.inf
+#
+#     # e1 = np.sum(((y100 - ysim_norm100) ** 2))
+#     # e2 = np.sum(((y10 - ysim_norm10) ** 2))
+#     # error = e1 + e2
+#
+#     return logp_total
 
 
 sampled_params_list = list()
