@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set()
 import random 
-random.seed(0)
+#random.seed(0)
 
 
 par_priors = np.load('optimizer_best_100_100_9_20_necromulti_pso0.npy')
@@ -258,19 +258,19 @@ if __name__ == '__main__':
     total_iterations = niterations
     sampled_params, log_ps = run_dream(parameters=sampled_params_list, likelihood=likelihood,
                                        niterations=niterations, nchains=nchains, multitry=False,
-                                       gamma_levels=4, adapt_gamma=True, history_thin=1, start=startvals,
-                                       model_name='necro_smallest_dreamzs116_5chainnew', verbose=True)
+                                       gamma_levels=4, adapt_gamma=True, history_thin=1,
+                                       model_name='necro_smallest_dreamzs116_5chainnew1', verbose=True)
 
     # Save sampling output (sampled parameter values and their corresponding logps).
     for chain in range(len(sampled_params)):
-        np.save('necro_smallest_dreamzs_5chain_sampled_params_chain116_new' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
-        np.save('necro_smallest_dreamzs_5chain_logps_chain116_new' + str(chain)+'_'+str(total_iterations), log_ps[chain])
+        np.save('necro_smallest_dreamzs_5chain_sampled_params_chain116_new1' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
+        np.save('necro_smallest_dreamzs_5chain_logps_chain116_new1' + str(chain)+'_'+str(total_iterations), log_ps[chain])
 
     #Check convergence and continue sampling if not converged
 
     GR = Gelman_Rubin(sampled_params)
     print('At iteration: ',total_iterations,' GR = ',GR)
-    np.savetxt('necro_smallest_dreamzs_5chain116_GelmanRubin_iteration_new'+str(total_iterations)+'.txt', GR)
+    np.savetxt('necro_smallest_dreamzs_5chain116_GelmanRubin_iteration_new1'+str(total_iterations)+'.txt', GR)
 
     old_samples = sampled_params
     if np.any(GR>1.2):
@@ -279,19 +279,19 @@ if __name__ == '__main__':
             total_iterations += niterations
             sampled_params, log_ps = run_dream(parameters=sampled_params_list, likelihood=likelihood,
                                                niterations=niterations, nchains=nchains, start=starts, multitry=False, gamma_levels=4,
-                                               adapt_gamma=True, history_thin=1, model_name='necro_smallest_dreamzs116_5chainnew',
+                                               adapt_gamma=True, history_thin=1, model_name='necro_smallest_dreamzs116_5chainnew1',
                                                verbose=True, restart=True)
 
 
             # Save sampling output (sampled parameter values and their corresponding logps).
             for chain in range(len(sampled_params)):
-                np.save('necro_smallest_dreamzs116_5chain_sampled_params_chainnew_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
-                np.save('necro_smallest_dreamzs116_5chain_logps_chainnew_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
+                np.save('necro_smallest_dreamzs116_5chain_sampled_params_chainnew1_' + str(chain)+'_'+str(total_iterations), sampled_params[chain])
+                np.save('necro_smallest_dreamzs116_5chain_logps_chainnew1_' + str(chain)+'_'+str(total_iterations), log_ps[chain])
 
             old_samples = [np.concatenate((old_samples[chain], sampled_params[chain])) for chain in range(nchains)]
             GR = Gelman_Rubin(old_samples)
             print('At iteration: ',total_iterations,' GR = ',GR)
-            np.savetxt('necro_smallest_dreamzs116_5chain_GelmanRubin_iterationnew_' + str(total_iterations)+'.txt', GR)
+            np.savetxt('necro_smallest_dreamzs116_5chain_GelmanRubin_iterationnew1_' + str(total_iterations)+'.txt', GR)
 
             if np.all(GR<1.2):
                 converged = True
@@ -309,7 +309,7 @@ if __name__ == '__main__':
         for dim in range(ndims):
             fig = plt.figure()
             sns.distplot(samples[:, dim], color=colors[dim], norm_hist=True)
-            fig.savefig('PyDREAM_necro116_smallest_dimensionnew_'+str(dim))
+            fig.savefig('PyDREAM_necro116_smallest_dimensionnew1_'+str(dim))
 
     except ImportError:
         pass
@@ -317,5 +317,5 @@ if __name__ == '__main__':
 else:
 
     run_kwargs = {'parameters':sampled_params_list, 'likelihood':likelihood, 'niterations':niterations, 'nchains':nchains, \
-                  'multitry':False, 'gamma_levels':4, 'adapt_gamma':True, 'history_thin':1, 'model_name':'necro_smallest_dreamzs116_5chainnew', 'verbose':False}
+                  'multitry':False, 'gamma_levels':4, 'adapt_gamma':True, 'history_thin':1, 'model_name':'necro_smallest_dreamzs116_5chainnew1', 'verbose':False}
 
