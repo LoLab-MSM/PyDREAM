@@ -21,25 +21,18 @@ par_priors = np.load('optimizer_best_100_100_9_20_necromulti_pso0.npy')
 # Number of chains - should be at least 3.
 nchains = 5
 # Number of iterations
-niterations = 20000
+niterations = 200000
 
 
 obs_names = ['MLKLa_obs']
 
 # Defining a few helper functions to use
-# def normalize(trajectories):
-#     """even though this is not really needed, if the data is already between 1 and 0!"""
-#     """Rescale a matrix of model trajectories to 0-1"""
-#     ymin = trajectories.min(0)
-#     ymax = trajectories.max(0)
-#     return (trajectories - ymin) / (ymax - ymin)
-
-def normalize(trajectory, trajectories):
+def normalize(trajectories):
     """even though this is not really needed, if the data is already between 1 and 0!"""
     """Rescale a matrix of model trajectories to 0-1"""
     ymin = trajectories.min(0)
     ymax = trajectories.max(0)
-    return (trajectory - ymin) / (ymax - ymin)
+    return (trajectories - ymin) / (ymax - ymin)
 
 t = np.array([0, 30, 90, 270, 480, 600, 720, 840, 960])
 y100_1 = np.array([0, 0.00885691708746097,0.0161886154261265,0.0373005242261882])
@@ -49,18 +42,25 @@ y100_2 = np.array([0.2798939020159581,0.510, .7797294067, 0.95,1])
 y10_1 = np.array([0, 0.0106013664572332,0.00519576571714913,0.02967443048221])
 y10_2 = np.array([0.050022163974868,0.108128107774737, 0.25,0.56055140114867, 0.77])
 
-solver = ScipyOdeSimulator(model, tspan=t) #, rtol=1e-6, # rtol : float or sequence relative tolerance for solution
+solver = ScipyOdeSimulator(model, tspan=t, compiler='cython') #, rtol=1e-6, # rtol : float or sequence relative tolerance for solution
                             #atol=1e-6) #atol : float or sequence absolute tolerance for solution
 
 rate_params = model.parameters_rules() # these are only the parameters involved in the rules
 param_values = np.array([p.value for p in model.parameters]) # these are all the parameters
 rate_mask = np.array([p in rate_params for p in model.parameters])  # this picks the element of intersection
 
-y100_data1 = halfnorm(loc=y100_1, scale = 0.5)
-y100_data2 = norm(loc=y100_2, scale = 0.5)
-y10_data1 = halfnorm(loc = y10_1, scale = 0.5)
-y10_data2 = norm(loc = y10_2, scale = 0.5)
+y100_data1 = halfnorm(loc=y100_1, scale = 0.10)
+y100_data2 = norm(loc=y100_2, scale = 0.10)
+y10_data1 = halfnorm(loc = y10_1, scale = 0.10)
+y10_data2 = norm(loc = y10_2, scale = 0.10)
 
+# plt.figure()
+# plt.hist(y100_data1)
+# plt.show()
+# quit()
+#
+# print(y100_data1)
+# quit()
 def likelihood(position):
     params_tmp = np.copy(position)  # here you pass the parameter vector; the point of making a copy of it is in order not to modify it
     param_values[rate_mask] = 10 ** params_tmp  # see comment above *
@@ -70,39 +70,11 @@ def likelihood(position):
     pars = [param_values, params_10]
     result = solver.run(tspan=t, param_values=pars)
 
-
-    sim_data_norm = {}
-    resultd = {}
-    resultd['tnf100'] = result.observables[0]['MLKLa_obs']
-    resultd['tnf10'] = result.observables[1]['MLKLa_obs']
-    for obs in ['tnf100', 'tnf10']:
-        sim_data_norm[obs] = normalize(resultd[obs], np.array(resultd['tnf100'] + resultd['tnf10']))
-    #
-    # plt.figure()
-    # plt.subplot(121)
-    # plt.plot(t/60, result.observables[0]['MLKLa_obs'], label='100')
-    # plt.plot(t/60, result.observables[1]['MLKLa_obs'])
-    #
-    # plt.subplot(122)
-    # plt.plot(t/60, sim_data_norm['tnf100'], label ='100')
-    # plt.plot(t/60, sim_data_norm['tnf10'])
-    # plt.show()
-
-    logp_y1001 = np.sum(y100_data1.logpdf(sim_data_norm['tnf100'][0:4]))
-    logp_y1002 = np.sum(y100_data2.logpdf(sim_data_norm['tnf100'][4:]))
-    logp_y101 = np.sum(y10_data1.logpdf(sim_data_norm['tnf10'][0:4]))
-    logp_y102 = np.sum(y10_data2.logpdf(sim_data_norm['tnf10'][4:]))
-
-    # ysim_norm = normalize(result.observables[:]['MLKLa_obs'])
-    # #     ysim_norm100 = normalize(result.observables[0]['MLKLa_obs'])
-    # print('ysimnorm')
-    # print(ysim_norm)
-
-    # ysim_norm100 = normalize(result.observables[0]['MLKLa_obs'])
+    ysim_norm100 = normalize(result.observables[0]['MLKLa_obs'])
     # print('ysimnorm 100')
     # print(ysim_norm100)
 
-    # ysim_norm10 = normalize(result.observables[1]['MLKLa_obs'])
+    ysim_norm10 = normalize(result.observables[1]['MLKLa_obs'])
     # print('ysimnorm 10')
     # print(ysim_norm10)
     # print(ysim_norm100)
@@ -111,19 +83,19 @@ def likelihood(position):
     # ysim_norm = normalize(result.observables['MLKLa_obs'])
     # error = np.sum(((y100 - ysim_norm) ** 2))
 
-    # logp_y1001 = np.sum(y100_data1.logpdf(ysim_norm100[0:4]))
-    # logp_y1002 = np.sum(y100_data2.logpdf(ysim_norm100[4:]))
-    # logp_y101 = np.sum(y10_data1.logpdf(ysim_norm10[0:4]))
-    # logp_y102 = np.sum(y10_data2.logpdf(ysim_norm10[4:]))
+    logp_y1001 = np.sum(y100_data1.logpdf(ysim_norm100[0:4]))
+    logp_y1002 = np.sum(y100_data2.logpdf(ysim_norm100[4:]))
+    logp_y101 = np.sum(y10_data1.logpdf(ysim_norm10[0:4]))
+    logp_y102 = np.sum(y10_data2.logpdf(ysim_norm10[4:]))
 
-    print('y1001')
-    print(logp_y1001)
-    print('y1002')
-    print(logp_y1002)
-    print('y101')
-    print(logp_y101)
-    print('y102')
-    print(logp_y102)
+    # print('y1001')
+    # print(logp_y1001)
+    # print('y1002')
+    # print(logp_y1002)
+    # print('y101')
+    # print(logp_y101)
+    # print('y102')
+    # print(logp_y102)
 
     logp_total = logp_y1001 + logp_y1002 + logp_y101 + logp_y102
 
