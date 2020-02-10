@@ -119,14 +119,14 @@ def likelihood(position):
     # logp_y101 = np.sum(y10_data1.logpdf(ysim_norm10[0:4]))
     # logp_y102 = np.sum(y10_data2.logpdf(ysim_norm10[4:]))
 
-    print('y1001')
-    print(logp_y1001)
-    print('y1002')
-    print(logp_y1002)
-    print('y101')
-    print(logp_y101)
-    print('y102')
-    print(logp_y102)
+#    print('y1001')
+#    print(logp_y1001)
+#    print('y1002')
+#    print(logp_y1002)
+#    print('y101')
+#    print(logp_y101)
+#    print('y102')
+#    print(logp_y102)
 
     logp_total = logp_y1001 + logp_y1002 + logp_y101 + logp_y102
 
@@ -289,8 +289,8 @@ if __name__ == '__main__':
     converged = False
     total_iterations = niterations
     sampled_params, log_ps = run_dream(parameters=sampled_params_list, likelihood=likelihood,
-                                       niterations=niterations, nchains=nchains, multitry=True,
-                                       gamma_levels=4, adapt_gamma=True, history_thin=1,nCR = 30,
+                                       niterations=niterations, nchains=nchains, multitry=False,
+                                       gamma_levels=4, adapt_gamma=True, history_thin=1,
                                        model_name='necro_smallest_dreamzs2620_5chainnew', verbose=True)
 
     # Save sampling output (sampled parameter values and their corresponding logps).
@@ -310,7 +310,7 @@ if __name__ == '__main__':
         while not converged:
             total_iterations += niterations
             sampled_params, log_ps = run_dream(parameters=sampled_params_list, likelihood=likelihood,
-                                               niterations=niterations, nchains=nchains, start=starts, multitry=True, nCR = 30,gamma_levels=4,
+                                               niterations=niterations, nchains=nchains, start=starts, multitry=False, gamma_levels=4,
                                                adapt_gamma=True, history_thin=1, model_name='necro_smallest_dreamzs2620_5chainnew',
                                                verbose=True, restart=True)
 
