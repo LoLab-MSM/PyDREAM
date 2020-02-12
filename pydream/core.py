@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import multiprocess as mp
+import multiprocessing as mp
+from concurrent.futures import ProcessPoolExecutor
 from . import Dream_shared_vars
-from .Dream import Dream, DreamPool
+from .Dream import Dream
 from .model import Model
 import traceback
 
@@ -55,11 +56,11 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
     else:
         step_instance = Dream(model=model, variables=parameters, verbose=verbose, **kwargs)
 
-    pool = _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=start)
+    pool_executor = _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=start)
 
     if tempering:        
         
-        sampled_params, log_ps = _sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose=verbose)
+        sampled_params, log_ps = _sample_dream_pt(nchains, niterations, step_instance, start, pool_executor, verbose=verbose)
     
     else:
     
@@ -69,7 +70,13 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
         else:
             args = list(zip([step_instance]*nchains, [niterations]*nchains, [start]*nchains, [verbose]*nchains, [nverbose]*nchains))
 
-        returned_vals = pool.map(_sample_dream, args)
+        results = [pool_executor.submit(_sample_dream, arg) for arg in args]
+        try:
+            returned_vals = [r.result() for r in results]
+        finally:
+            for r in results:
+                r.cancel()
+        pool_executor.shutdown()
         sampled_params = [val[0] for val in returned_vals]
         log_ps = [val[1] for val in returned_vals]   
     
@@ -117,7 +124,7 @@ def _sample_dream(args):
 
     return sampled_params, log_ps
 
-def _sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose):
+def _sample_dream_pt(nchains, niterations, step_instance, start, pool_executor, verbose):
     
     T = np.zeros((nchains))
     T[0] = 1.
@@ -160,7 +167,13 @@ def _sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose):
                 naccepts100win = np.zeros((nchains))
                 nacceptsT100win = np.zeros((nchains))
 
-        returned_vals = pool.map(_sample_dream_pt_chain, args)
+        results = [pool_executor.submit(_sample_dream, arg) for arg in args]
+        try:
+            returned_vals = [r.result() for r in results]
+        finally:
+            for r in results:
+                r.cancel()
+        pool_executor.shutdown()
         qnews = [val[0] for val in returned_vals]
         logprinews = [val[1] for val in returned_vals]
         loglikenews = [val[2] for val in returned_vals]
@@ -288,11 +301,14 @@ def _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=None):
             print('Warning: start position provided but random_start set to True.  Overrode random_start value and starting walk at provided start position.')
             step_instance.start_random = False
 
-    p = DreamPool(nchains, initializer=_mp_dream_init, initargs=(history_arr, current_position_arr, shared_nchains, crossover_probabilities, ncrossover_updates, delta_m, gamma_probabilities, ngamma_updates, delta_m_gamma, n, tf, ))
+    pool_executor = ProcessPoolExecutor(max_workers=nchains, initializer=_mp_dream_init, mp_context=mp.get_context('spawn'),
+                                        initargs=(history_arr, current_position_arr, shared_nchains,
+                                                  crossover_probabilities, ncrossover_updates, delta_m,
+                                                  gamma_probabilities, ngamma_updates, delta_m_gamma, n, tf, ))
     #p = mp.pool.ThreadPool(nchains, initializer=_mp_dream_init, initargs=(history_arr, current_position_arr, shared_nchains, crossover_probabilities, ncrossover_updates, delta_m, gamma_probabilities, ngamma_updates, delta_m_gamma, n, tf, ))
     #p = mp.Pool(nchains, initializer=_mp_dream_init, initargs=(history_arr, current_position_arr, shared_nchains, crossover_probabilities, ncrossover_updates, delta_m, gamma_probabilities, ngamma_updates, delta_m_gamma, n, tf, ))
 
-    return p
+    return pool_executor
 
 def _mp_dream_init(arr, cp_arr, nchains, crossover_probs, ncrossover_updates, delta_m, gamma_probs, ngamma_updates, delta_m_gamma, val, switch):
       Dream_shared_vars.history = arr

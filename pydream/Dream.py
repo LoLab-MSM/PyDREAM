@@ -5,8 +5,7 @@ import random
 from . import Dream_shared_vars
 from datetime import datetime
 import traceback
-import multiprocess as mp
-import multiprocess.pool as mp_pool
+import multiprocessing as mp
 import time
 
 class Dream():
@@ -846,11 +845,16 @@ class Dream():
         
         #If using multi-try and running in parallel farm out proposed points to process pool.
         if parallel:
-            p = mp.Pool(multitry)
-            args = list(zip([self]*multitry, np.squeeze(proposed_pts)))
-            logps = p.map(call_logp, args)
-            p.close()
-            p.join()
+            from concurrent.futures import ProcessPoolExecutor
+            with ProcessPoolExecutor(max_workers=multitry, mp_context=mp.get_context('spawn')) as executor:
+                results = [executor.submit(call_logp, args)
+                           for args in zip([self]*multitry, np.squeeze(proposed_pts))]
+                try:
+                    logps = [r.result() for r in results]
+                finally:
+                    for r in results:
+                        r.cancel()
+
             log_priors = [val[0] for val in logps]
             log_likes = [val[1] for val in logps]
             
@@ -989,23 +993,3 @@ def metrop_select(mr, q, q0):
     else:
         # Reject proposed value
         return q0
-
-        
-class NoDaemonProcess(mp.Process):
-    def __init__(self, group=None, target=None, name=None, args=(), kwargs={}):
-        mp.Process.__init__(self, group, target, name, args, kwargs)
-
-    # make 'daemon' attribute always return False
-    def _get_daemon(self):
-        return False
-    def _set_daemon(self, value):
-        pass
-    daemon = property(_get_daemon, _set_daemon)
-
-#A subclass of multiprocessing.pool.Pool that allows processes to launch child processes (this is necessary for Dream to use multi-try)
-#Taken from http://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic
-class DreamPool(mp_pool.Pool):
-    def __init__(self, processes=None, initializer=None, initargs=None, maxtasksperchild=None):
-        mp_pool.Pool.__init__(self, processes, initializer, initargs, maxtasksperchild)
-    Process = NoDaemonProcess
-
