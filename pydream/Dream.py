@@ -846,7 +846,7 @@ class Dream():
         #If using multi-try and running in parallel farm out proposed points to process pool.
         if parallel:
             from platform import python_version
-            if python_version() < 3.7:
+            if python_version() < '3.7':
                 from .dream_pool import DreamProcessPoolExecutor
             else:
                 from concurrent.futures import ProcessPoolExecutor as DreamProcessPoolExecutor

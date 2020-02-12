@@ -8,7 +8,7 @@ from .model import Model
 import traceback
 from platform import python_version
 
-if python_version() < 3.7:
+if python_version() < '3.7':
     from .dream_pool import DreamProcessPoolExecutor
 else:
     from concurrent.futures import ProcessPoolExecutor as DreamProcessPoolExecutor
