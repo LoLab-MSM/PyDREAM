@@ -595,7 +595,7 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
 
         start = np.array([-100, 5, 8, .001])
 
-        sampled_params, logps = _sample_dream_pt(nchains=3, niterations=10, step_instance=dream, start=start, pool=pool, verbose=False)
+        sampled_params, logps = _sample_dream_pt(nchains=3, niterations=10, step_instance=dream, start=start, pool_executor=pool, verbose=False)
 
         self.assertEqual(len(sampled_params), 3)
         self.assertEqual(len(sampled_params[0]), 20)
