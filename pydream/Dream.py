@@ -845,8 +845,12 @@ class Dream():
         
         #If using multi-try and running in parallel farm out proposed points to process pool.
         if parallel:
-            from concurrent.futures import ProcessPoolExecutor
-            with ProcessPoolExecutor(max_workers=multitry, mp_context=mp.get_context('spawn')) as executor:
+            from platform import python_version
+            if python_version() < 3.7:
+                from .dream_pool import DreamProcessPoolExecutor
+            else:
+                from concurrent.futures import ProcessPoolExecutor as DreamProcessPoolExecutor
+            with DreamProcessPoolExecutor(max_workers=multitry, mp_context=mp.get_context('fork')) as executor:
                 results = [executor.submit(call_logp, args)
                            for args in zip([self]*multitry, np.squeeze(proposed_pts))]
                 try:
