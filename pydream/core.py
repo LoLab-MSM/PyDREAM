@@ -301,7 +301,7 @@ def _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=None):
             print('Warning: start position provided but random_start set to True.  Overrode random_start value and starting walk at provided start position.')
             step_instance.start_random = False
 
-    pool_executor = ProcessPoolExecutor(max_workers=nchains, initializer=_mp_dream_init, mp_context=mp.get_context('spawn'),
+    pool_executor = ProcessPoolExecutor(max_workers=nchains, initializer=_mp_dream_init, mp_context=mp.get_context('fork'),
                                         initargs=(history_arr, current_position_arr, shared_nchains,
                                                   crossover_probabilities, ncrossover_updates, delta_m,
                                                   gamma_probabilities, ngamma_updates, delta_m_gamma, n, tf, ))
