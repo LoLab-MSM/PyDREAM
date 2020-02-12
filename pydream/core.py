@@ -167,7 +167,7 @@ def _sample_dream_pt(nchains, niterations, step_instance, start, pool_executor, 
                 naccepts100win = np.zeros((nchains))
                 nacceptsT100win = np.zeros((nchains))
 
-        results = [pool_executor.submit(_sample_dream, arg) for arg in args]
+        results = [pool_executor.submit(_sample_dream_pt_chain, arg) for arg in args]
         try:
             returned_vals = [r.result() for r in results]
         finally:
