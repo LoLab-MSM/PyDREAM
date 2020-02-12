@@ -1,8 +1,7 @@
 language: python
 env:
-- PYVER=2.7
-- PYVER=3.6
 - PYVER=3.7
+- PYVER=3.8
 before_install:
 - wget http://repo.continuum.io/miniconda/Miniconda${PYVER:0:1}-latest-Linux-x86_64.sh
   -O miniconda.sh
