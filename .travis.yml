@@ -1,5 +1,6 @@
 language: python
 env:
+- PYVER=3.6
 - PYVER=3.7
 - PYVER=3.8
 before_install:
