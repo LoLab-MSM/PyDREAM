@@ -32,8 +32,6 @@ class SampledParam():
         else:
             random_seed = None
 
-        random = self.dist.rvs(random_state=random_seed)
-
         return self.dist.rvs(random_state=random_seed)
 
     def prior(self, q0):
