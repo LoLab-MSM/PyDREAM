@@ -990,22 +990,81 @@ def metrop_select(mr, q, q0):
         # Reject proposed value
         return q0
 
-        
-class NoDaemonProcess(mp.Process):
-    def __init__(self, group=None, target=None, name=None, args=(), kwargs={}):
-        mp.Process.__init__(self, group, target, name, args, kwargs)
 
-    # make 'daemon' attribute always return False
-    def _get_daemon(self):
+# Pythons 2.7, 3.4-3.7.0, and 3.7.1 have three different implementations of
+# pool.Pool().Process(), and the type of the result varies based on the default
+# multiprocessing context, so we need to dynamically patch the daemon property
+class NonDaemonMixin(object):
+    @property
+    def daemon(self):
         return False
-    def _set_daemon(self, value):
+
+    @daemon.setter
+    def daemon(self, val):
         pass
-    daemon = property(_get_daemon, _set_daemon)
 
-#A subclass of multiprocessing.pool.Pool that allows processes to launch child processes (this is necessary for Dream to use multi-try)
-#Taken from http://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic
-class DreamPool(mp_pool.Pool):
-    def __init__(self, processes=None, initializer=None, initargs=None, maxtasksperchild=None):
-        mp_pool.Pool.__init__(self, processes, initializer, initargs, maxtasksperchild)
-    Process = NoDaemonProcess
 
+try:
+    from multiprocessing import context
+
+
+    # Exists on all platforms
+    class NonDaemonSpawnProcess(NonDaemonMixin, context.SpawnProcess):
+        pass
+
+
+    class NonDaemonSpawnContext(context.SpawnContext):
+        Process = NonDaemonSpawnProcess
+
+
+    _nondaemon_context_mapper = {
+        'spawn': NonDaemonSpawnContext()
+    }
+
+    # POSIX only
+    try:
+        class NonDaemonForkProcess(NonDaemonMixin, context.ForkProcess):
+            pass
+
+
+        class NonDaemonForkContext(context.ForkContext):
+            Process = NonDaemonForkProcess
+
+
+        _nondaemon_context_mapper['fork'] = NonDaemonForkContext()
+    except AttributeError:
+        pass
+    # POSIX only
+    try:
+        class NonDaemonForkServerProcess(NonDaemonMixin, context.ForkServerProcess):
+            pass
+
+
+        class NonDaemonForkServerContext(context.ForkServerContext):
+            Process = NonDaemonForkServerProcess
+
+
+        _nondaemon_context_mapper['forkserver'] = NonDaemonForkServerContext()
+    except AttributeError:
+        pass
+
+
+    class DreamPool(mp.pool.Pool):
+        def __init__(self, processes=None, initializer=None, initargs=(),
+                     maxtasksperchild=None, context=None):
+            if context is None:
+                context = mp.get_context()
+            context = _nondaemon_context_mapper[context._name]
+            super(DreamPool, self).__init__(processes=processes,
+                                                initializer=initializer,
+                                                initargs=initargs,
+                                                maxtasksperchild=maxtasksperchild,
+                                                context=context)
+
+except ImportError:
+    class NonDaemonProcess(NonDaemonMixin, mp.Process):
+        pass
+
+
+    class DreamPool(mp.pool.Pool):
+        Process = NonDaemonProcess
