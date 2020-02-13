@@ -12,8 +12,6 @@ before_install:
 - conda update --yes conda
 - conda install --yes -c conda-forge -c alubbock python="$PYVER" numpy scipy nose cython
   pysb
-- pip install python-dateutil
-- pip install -r requirements.txt
 install:
 - pip install .
 script:
