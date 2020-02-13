@@ -81,10 +81,10 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
         finally:
             for r in results:
                 r.cancel()
-        pool_executor.shutdown()
+
         sampled_params = [val[0] for val in returned_vals]
-        log_ps = [val[1] for val in returned_vals]   
-    
+        log_ps = [val[1] for val in returned_vals]
+    pool_executor.shutdown()
     return sampled_params, log_ps
 
 def _sample_dream(args):
@@ -178,7 +178,6 @@ def _sample_dream_pt(nchains, niterations, step_instance, start, pool_executor, 
         finally:
             for r in results:
                 r.cancel()
-        pool_executor.shutdown()
         qnews = [val[0] for val in returned_vals]
         logprinews = [val[1] for val in returned_vals]
         loglikenews = [val[2] for val in returned_vals]
