@@ -417,7 +417,7 @@ class BrokenProcessPool(RuntimeError):
 
 
 class DreamProcessPoolExecutor(_base.Executor):
-    def __init__(self, max_workers=None, initializer=None, initargs=()):
+    def __init__(self, max_workers=None, mp_context=None, initializer=None, initargs=()):
         """Initializes a new ProcessPoolExecutor instance.
 
         Args:
