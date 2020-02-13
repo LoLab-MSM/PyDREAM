@@ -5,8 +5,8 @@ import random
 from . import Dream_shared_vars
 from datetime import datetime
 import traceback
-import multiprocess as mp
-import multiprocess.pool as mp_pool
+import multiprocessing as mp
+import multiprocessing.pool as mp_pool
 import time
 
 class Dream():

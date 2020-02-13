@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import multiprocess as mp
+import multiprocessing as mp
 from . import Dream_shared_vars
 from .Dream import Dream, DreamPool
 from .model import Model
