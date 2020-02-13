@@ -6,6 +6,7 @@ from . import Dream_shared_vars
 from datetime import datetime
 import traceback
 import multiprocessing as mp
+from multiprocessing import pool
 import time
 
 class Dream():
@@ -853,7 +854,7 @@ class Dream():
         #If using multi-try and running in parallel farm out proposed points to process pool.
         if parallel:
             args = list(zip([self] * multitry, np.squeeze(proposed_pts)))
-            with mp.pool.Pool(multitry, context=self.mp_context) as p:
+            with pool.Pool(multitry, context=self.mp_context) as p:
                 logps = p.map(call_logp, args)
             log_priors = [val[0] for val in logps]
             log_likes = [val[1] for val in logps]
@@ -1053,7 +1054,7 @@ try:
         pass
 
 
-    class DreamPool(mp.pool.Pool):
+    class DreamPool(pool.Pool):
         def __init__(self, processes=None, initializer=None, initargs=(),
                      maxtasksperchild=None, context=None):
             if context is None:
@@ -1070,5 +1071,5 @@ except ImportError:
         pass
 
 
-    class DreamPool(mp.pool.Pool):
+    class DreamPool(pool.Pool):
         Process = NonDaemonProcess
