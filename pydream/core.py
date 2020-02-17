@@ -78,7 +78,8 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
         returned_vals = pool.map(_sample_dream, args)
         sampled_params = [val[0] for val in returned_vals]
         log_ps = [val[1] for val in returned_vals]   
-    
+    pool.close()
+    pool.join()
     return sampled_params, log_ps
 
 def _sample_dream(args):
