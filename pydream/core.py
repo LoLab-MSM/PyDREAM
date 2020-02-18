@@ -29,7 +29,9 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
         Whether to print verbose output (including acceptance or rejection of moves and the current acceptance rate).  Default: True
     tempering: Boolean, optional
         Whether to use parallel tempering for the DREAM chains.  Warning: this feature is untested.  Use at your own risk! Default: False
-    mp_context: multiprocessing context or None. It will be used to launch the workers
+    mp_context: multiprocessing context or None.
+        Method used to to start the processes. If it's None, the default context, which depends in Python version and OS, is used.
+        For more information please check: https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
     kwargs:
         Other arguments that will be passed to the Dream class on initialization.  For more information, see Dream class.
 
@@ -62,25 +64,27 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
         step_instance = Dream(model=model, variables=parameters, verbose=verbose, mp_context=mp_context, **kwargs)
 
     pool = _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=start, mp_context=mp_context)
+    try:
+        if tempering:
 
-    if tempering:        
-        
-        sampled_params, log_ps = _sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose=verbose)
-    
-    else:
-    
-        if type(start) is list:
-            args = zip([step_instance]*nchains, [niterations]*nchains, start, [verbose]*nchains, [nverbose]*nchains)
+            sampled_params, log_ps = _sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose=verbose)
 
         else:
-            args = list(zip([step_instance]*nchains, [niterations]*nchains, [start]*nchains, [verbose]*nchains, [nverbose]*nchains))
 
-        returned_vals = pool.map(_sample_dream, args)
-        sampled_params = [val[0] for val in returned_vals]
-        log_ps = [val[1] for val in returned_vals]   
-    pool.close()
-    pool.join()
+            if type(start) is list:
+                args = zip([step_instance]*nchains, [niterations]*nchains, start, [verbose]*nchains, [nverbose]*nchains)
+
+            else:
+                args = list(zip([step_instance]*nchains, [niterations]*nchains, [start]*nchains, [verbose]*nchains, [nverbose]*nchains))
+
+            returned_vals = pool.map(_sample_dream, args)
+            sampled_params = [val[0] for val in returned_vals]
+            log_ps = [val[1] for val in returned_vals]
+    finally:
+        pool.close()
+        pool.join()
     return sampled_params, log_ps
+
 
 def _sample_dream(args):
 
