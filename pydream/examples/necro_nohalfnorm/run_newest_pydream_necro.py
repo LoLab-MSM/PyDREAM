@@ -26,7 +26,7 @@ niterations = 20000
 
 obs_names = ['MLKLa_obs']
 
-# Defining a few helper functions to use
+
 def normalize(trajectories):
     """even though this is not really needed, if the data is already between 1 and 0!"""
     """Rescale a matrix of model trajectories to 0-1"""
@@ -34,12 +34,20 @@ def normalize(trajectories):
     ymax = trajectories.max(0)
     return (trajectories - ymin) / (ymax - ymin)
 
-# def normalize(trajectory, trajectories):
+# Defining a few helper functions to use
+#def normalize(trajectories):
 #     """even though this is not really needed, if the data is already between 1 and 0!"""
 #     """Rescale a matrix of model trajectories to 0-1"""
-#     ymin = trajectories.min(0)
-#     ymax = trajectories.max(0)
-#     return (trajectory - ymin) / (ymax - ymin)
+#    ymin = trajectories.min(0)
+#    ymax = trajectories.max(0)
+#    return (trajectories - ymin) / (ymax - ymin)
+
+#def normalize(trajectory, trajectories):
+#    """even though this is not really needed, if the data is already between 1 and 0!"""
+#    """Rescale a matrix of model trajectories to 0-1"""
+#    ymin = trajectories.min(0)
+#    ymax = trajectories.max(0)
+#    return (trajectory - ymin) / (ymax - ymin)
 
 t = np.array([0, 30, 90, 270, 480, 600, 720, 840, 960])
 # y100_1 = np.array([0, 0.00885691708746097,0.0161886154261265,0.0373005242261882])
@@ -286,7 +294,7 @@ if __name__ == '__main__':
     converged = False
     total_iterations = niterations
     sampled_params, log_ps = run_dream(parameters=sampled_params_list, likelihood=likelihood,
-                                       niterations=niterations, nchains=nchains, multitry=True,
+                                       niterations=niterations, nchains=nchains, multitry=False,
                                        gamma_levels=4, adapt_gamma=True, history_thin=1,
                                        model_name='necro_smallest_dreamzs21320_5chain', verbose=True)
 
@@ -307,7 +315,7 @@ if __name__ == '__main__':
         while not converged:
             total_iterations += niterations
             sampled_params, log_ps = run_dream(parameters=sampled_params_list, likelihood=likelihood,
-                                               niterations=niterations, nchains=nchains, start=starts, multitry=True, gamma_levels=4,
+                                               niterations=niterations, nchains=nchains, start=starts, multitry=False, gamma_levels=4,
                                                adapt_gamma=True, history_thin=1, model_name='necro_smallest_dreamzs21320_5chain',
                                                verbose=True, restart=True)
 
@@ -347,4 +355,5 @@ else:
 
     run_kwargs = {'parameters':sampled_params_list, 'likelihood':likelihood, 'niterations':niterations, 'nchains':nchains, \
                   'multitry':True, 'gamma_levels':4, 'adapt_gamma':True, 'history_thin':1, 'model_name':'necro_smallest_dreamzs21320_5chain', 'verbose':False}
+
 
