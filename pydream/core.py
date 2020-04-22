@@ -189,9 +189,8 @@ def _sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose):
         T2 = T[random_chains[1]]
         logp1 = logpnews[random_chains[0]]
         logp2 = logpnews[random_chains[1]]
-        
             
-        alpha = ((T1*loglike2)+(T2*loglike1))-((T1*loglike1)+(T2*loglike2))
+        alpha = ((1/T1) - (1/T2)) * (loglike1 - loglike2)
         
         if np.log(np.random.uniform()) < alpha:
             if verbose:
