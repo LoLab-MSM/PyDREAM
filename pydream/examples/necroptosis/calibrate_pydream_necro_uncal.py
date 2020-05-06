@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set()
 import random 
-random.seed(0)
+# random.seed(0)
 
 # quit()
 # fig, ax = plt.subplots(1, 1)
