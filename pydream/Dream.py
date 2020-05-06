@@ -5,8 +5,8 @@ import random
 from . import Dream_shared_vars
 from datetime import datetime
 import traceback
-import multiprocess as mp
-import multiprocess.pool as mp_pool
+import multiprocessing as mp
+from multiprocessing import pool
 import time
 
 class Dream():
@@ -55,11 +55,20 @@ class Dream():
         A model name to be used as a prefix when saving history and crossover value files.
     hardboundaries : bool
         Whether to relect point back into bounds of hard prior (i.e., if using a uniform prior, reflect points outside of boundaries back in, so you don't waste time looking at points with logpdf = -inf).
+    mp_context : multiprocessing context or None.
+        Method used to to start the processes. If it's None, the default context, which depends in Python version and OS, is used.
+        For more information please check: https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
     """
-    
-    def __init__(self, model, variables=None, nseedchains=None, nCR=3, adapt_crossover=True, adapt_gamma=False, crossover_burnin=None, DEpairs=1, lamb=.05, zeta=1e-12, history_thin=10, snooker=.10, p_gamma_unity=.20, gamma_levels=1, start_random=True, save_history=True, history_file=False, crossover_file=False, gamma_file=False, multitry=False, parallel=False, verbose=False, model_name=False, hardboundaries=True, **kwargs):
 
-        #Set model and variable attributes (if no variables passed, set to all parameters)
+    def __init__(self, model, variables=None, nseedchains=None, nCR=3, adapt_crossover=True, adapt_gamma=False,
+                 crossover_burnin=None, DEpairs=1, lamb=.05, zeta=1e-12, history_thin=10, snooker=.10,
+                 p_gamma_unity=.20, gamma_levels=1, start_random=True, save_history=True, history_file=False,
+                 crossover_file=False, gamma_file=False, multitry=False, parallel=False, verbose=False,
+                 model_name=False, hardboundaries=True, mp_context=None, **kwargs):
+
+        # Set Dream multiprocessing context
+        self.mp_context = mp_context
+        # Set model and variable attributes (if no variables passed, set to all parameters)
         self.model = model
         self.model_name = model_name
         if variables is None:
@@ -195,14 +204,14 @@ class Dream():
                     if not self.history_file:
                         if self.verbose:
                             print('History file not loaded.')
-                        if Dream_shared_vars.history_seeded.value == 'F':
+                        if Dream_shared_vars.history_seeded.value == b'F':
                             if self.verbose:
                                 print('Seeding history with ',self.nseedchains,' draws from prior.')
                             for i in range(self.nseedchains):
                                 start_loc = i*self.total_var_dimension
                                 end_loc = start_loc+self.total_var_dimension
                                 Dream_shared_vars.history[start_loc:end_loc] = self.draw_from_prior(self.variables)
-                            Dream_shared_vars.history_seeded.value = 'T'
+                            Dream_shared_vars.history_seeded.value = b'T'
                     else:
                         if self.verbose:
                             print('History file loaded.')
@@ -846,11 +855,9 @@ class Dream():
         
         #If using multi-try and running in parallel farm out proposed points to process pool.
         if parallel:
-            p = mp.Pool(multitry)
-            args = list(zip([self]*multitry, np.squeeze(proposed_pts)))
-            logps = p.map(call_logp, args)
-            p.close()
-            p.join()
+            args = list(zip([self] * multitry, np.squeeze(proposed_pts)))
+            with pool.Pool(multitry, context=self.mp_context) as p:
+                logps = p.map(call_logp, args)
             log_priors = [val[0] for val in logps]
             log_likes = [val[1] for val in logps]
             
@@ -990,22 +997,76 @@ def metrop_select(mr, q, q0):
         # Reject proposed value
         return q0
 
-        
-class NoDaemonProcess(mp.Process):
-    def __init__(self, group=None, target=None, name=None, args=(), kwargs={}):
-        mp.Process.__init__(self, group, target, name, args, kwargs)
+# The following part uses source code from the file legacymultiproc.py from https://github.com/nipy/nipype
+# copyright NIPY developers, licensed under the Apache 2.0 license.
 
-    # make 'daemon' attribute always return False
-    def _get_daemon(self):
+# Pythons 3.4-3.7.0, and 3.7.1 have three different implementations of
+# pool.Pool().Process(), and the type of the result varies based on the default
+# multiprocessing context, so we need to dynamically patch the daemon property
+
+
+class NonDaemonMixin(object):
+    @property
+    def daemon(self):
         return False
-    def _set_daemon(self, value):
+
+    @daemon.setter
+    def daemon(self, val):
         pass
-    daemon = property(_get_daemon, _set_daemon)
 
-#A subclass of multiprocessing.pool.Pool that allows processes to launch child processes (this is necessary for Dream to use multi-try)
-#Taken from http://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic
-class DreamPool(mp_pool.Pool):
-    def __init__(self, processes=None, initializer=None, initargs=None, maxtasksperchild=None):
-        mp_pool.Pool.__init__(self, processes, initializer, initargs, maxtasksperchild)
-    Process = NoDaemonProcess
 
+from multiprocessing import context
+
+
+# Exists on all platforms
+class NonDaemonSpawnProcess(NonDaemonMixin, context.SpawnProcess):
+    pass
+
+
+class NonDaemonSpawnContext(context.SpawnContext):
+    Process = NonDaemonSpawnProcess
+
+
+_nondaemon_context_mapper = {
+    'spawn': NonDaemonSpawnContext()
+}
+
+# POSIX only
+try:
+    class NonDaemonForkProcess(NonDaemonMixin, context.ForkProcess):
+        pass
+
+
+    class NonDaemonForkContext(context.ForkContext):
+        Process = NonDaemonForkProcess
+
+
+    _nondaemon_context_mapper['fork'] = NonDaemonForkContext()
+except AttributeError:
+    pass
+# POSIX only
+try:
+    class NonDaemonForkServerProcess(NonDaemonMixin, context.ForkServerProcess):
+        pass
+
+
+    class NonDaemonForkServerContext(context.ForkServerContext):
+        Process = NonDaemonForkServerProcess
+
+
+    _nondaemon_context_mapper['forkserver'] = NonDaemonForkServerContext()
+except AttributeError:
+    pass
+
+
+class DreamPool(pool.Pool):
+    def __init__(self, processes=None, initializer=None, initargs=(),
+                 maxtasksperchild=None, context=None):
+        if context is None:
+            context = mp.get_context()
+        context = _nondaemon_context_mapper[context._name]
+        super(DreamPool, self).__init__(processes=processes,
+                                        initializer=initializer,
+                                        initargs=initargs,
+                                        maxtasksperchild=maxtasksperchild,
+                                        context=context)

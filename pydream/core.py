@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import multiprocess as mp
+import multiprocessing as mp
 from . import Dream_shared_vars
 from .Dream import Dream, DreamPool
 from .model import Model
 import traceback
 
-def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, restart=False, verbose=True, nverbose=10, tempering=False, **kwargs):
+
+def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, restart=False, verbose=True, nverbose=10, tempering=False, mp_context=None, **kwargs):
     """Run DREAM given a set of parameters with priors and a likelihood function.
 
     Parameters
@@ -28,6 +29,9 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
         Whether to print verbose output (including acceptance or rejection of moves and the current acceptance rate).  Default: True
     tempering: Boolean, optional
         Whether to use parallel tempering for the DREAM chains.  Warning: this feature is untested.  Use at your own risk! Default: False
+    mp_context: multiprocessing context or None.
+        Method used to to start the processes. If it's None, the default context, which depends in Python version and OS, is used.
+        For more information please check: https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
     kwargs:
         Other arguments that will be passed to the Dream class on initialization.  For more information, see Dream class.
 
@@ -51,29 +55,36 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
     model = Model(likelihood=likelihood, sampled_parameters=parameters)
     
     if restart:
-        step_instance = Dream(model=model, variables=parameters, history_file=kwargs['model_name']+'_DREAM_chain_history.npy', crossover_file=kwargs['model_name']+'_DREAM_chain_adapted_crossoverprob.npy', gamma_file=kwargs['model_name']+'_DREAM_chain_adapted_gammalevelprob.npy', verbose=verbose, **kwargs)
+        step_instance = Dream(model=model, variables=parameters,
+                              history_file=kwargs['model_name'] + '_DREAM_chain_history.npy',
+                              crossover_file=kwargs['model_name'] + '_DREAM_chain_adapted_crossoverprob.npy',
+                              gamma_file=kwargs['model_name'] + '_DREAM_chain_adapted_gammalevelprob.npy',
+                              verbose=verbose, mp_context=mp_context, **kwargs)
     else:
-        step_instance = Dream(model=model, variables=parameters, verbose=verbose, **kwargs)
+        step_instance = Dream(model=model, variables=parameters, verbose=verbose, mp_context=mp_context, **kwargs)
 
-    pool = _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=start)
+    pool = _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=start, mp_context=mp_context)
+    try:
+        if tempering:
 
-    if tempering:        
-        
-        sampled_params, log_ps = _sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose=verbose)
-    
-    else:
-    
-        if type(start) is list:
-            args = zip([step_instance]*nchains, [niterations]*nchains, start, [verbose]*nchains, [nverbose]*nchains)
+            sampled_params, log_ps = _sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose=verbose)
 
         else:
-            args = list(zip([step_instance]*nchains, [niterations]*nchains, [start]*nchains, [verbose]*nchains, [nverbose]*nchains))
 
-        returned_vals = pool.map(_sample_dream, args)
-        sampled_params = [val[0] for val in returned_vals]
-        log_ps = [val[1] for val in returned_vals]   
-    
+            if type(start) is list:
+                args = zip([step_instance]*nchains, [niterations]*nchains, start, [verbose]*nchains, [nverbose]*nchains)
+
+            else:
+                args = list(zip([step_instance]*nchains, [niterations]*nchains, [start]*nchains, [verbose]*nchains, [nverbose]*nchains))
+
+            returned_vals = pool.map(_sample_dream, args)
+            sampled_params = [val[0] for val in returned_vals]
+            log_ps = [val[1] for val in returned_vals]
+    finally:
+        pool.close()
+        pool.join()
     return sampled_params, log_ps
+
 
 def _sample_dream(args):
 
@@ -236,7 +247,7 @@ def _sample_dream_pt_chain(args):
     
     return q1, logprior1, loglike1, dream_instance
 
-def _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=None):
+def _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=None, mp_context=None):
     
     min_njobs = (2*len(step_instance.DEpairs))+1
     if nchains < min_njobs:
@@ -262,23 +273,28 @@ def _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=None):
         raise Exception('The size of the seeded starting history is insufficient.  Increase nseedchains>=%s.' %str(min_nseedchains))
         
     current_position_dim = nchains*step_instance.total_var_dimension
-    history_arr = mp.Array('d', [0]*int(arr_dim))
+    # Get context to define arrays
+    if mp_context is None:
+        ctx = mp.get_context(mp_context)
+    else:
+        ctx = mp_context
+    history_arr = ctx.Array('d', [0] * int(arr_dim))
     if step_instance.history_file != False:
         history_arr[0:len_old_history] = old_history.flatten()
     nCR = step_instance.nCR
     ngamma = step_instance.ngamma
     crossover_setting = step_instance.CR_probabilities
-    crossover_probabilities = mp.Array('d', crossover_setting)  
-    ncrossover_updates = mp.Array('d', [0]*nCR)
-    delta_m = mp.Array('d', [0]*nCR)
+    crossover_probabilities = ctx.Array('d', crossover_setting)
+    ncrossover_updates = ctx.Array('d', [0] * nCR)
+    delta_m = ctx.Array('d', [0] * nCR)
     gamma_level_setting = step_instance.gamma_probabilities
-    gamma_probabilities = mp.Array('d', gamma_level_setting)
-    ngamma_updates = mp.Array('d', [0]*ngamma)
-    delta_m_gamma = mp.Array('d', [0]*ngamma)
-    current_position_arr = mp.Array('d', [0]*current_position_dim)
-    shared_nchains = mp.Value('i', nchains)
-    n = mp.Value('i', 0)
-    tf = mp.Value('c', b'F')
+    gamma_probabilities = ctx.Array('d', gamma_level_setting)
+    ngamma_updates = ctx.Array('d', [0] * ngamma)
+    delta_m_gamma = ctx.Array('d', [0] * ngamma)
+    current_position_arr = ctx.Array('d', [0] * current_position_dim)
+    shared_nchains = ctx.Value('i', nchains)
+    n = ctx.Value('i', 0)
+    tf = ctx.Value('c', b'F')
     
     if step_instance.crossover_burnin == None:
         step_instance.crossover_burnin = int(np.floor(niterations/10))
@@ -288,9 +304,12 @@ def _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=None):
             print('Warning: start position provided but random_start set to True.  Overrode random_start value and starting walk at provided start position.')
             step_instance.start_random = False
 
-    p = DreamPool(nchains, initializer=_mp_dream_init, initargs=(history_arr, current_position_arr, shared_nchains, crossover_probabilities, ncrossover_updates, delta_m, gamma_probabilities, ngamma_updates, delta_m_gamma, n, tf, ))
-    #p = mp.pool.ThreadPool(nchains, initializer=_mp_dream_init, initargs=(history_arr, current_position_arr, shared_nchains, crossover_probabilities, ncrossover_updates, delta_m, gamma_probabilities, ngamma_updates, delta_m_gamma, n, tf, ))
-    #p = mp.Pool(nchains, initializer=_mp_dream_init, initargs=(history_arr, current_position_arr, shared_nchains, crossover_probabilities, ncrossover_updates, delta_m, gamma_probabilities, ngamma_updates, delta_m_gamma, n, tf, ))
+    p = DreamPool(nchains, context=ctx, initializer=_mp_dream_init,
+                  initargs=(history_arr, current_position_arr, shared_nchains,
+                            crossover_probabilities, ncrossover_updates, delta_m,
+                            gamma_probabilities, ngamma_updates, delta_m_gamma, n, tf,))
+    # p = mp.pool.ThreadPool(nchains, initializer=_mp_dream_init, initargs=(history_arr, current_position_arr, shared_nchains, crossover_probabilities, ncrossover_updates, delta_m, gamma_probabilities, ngamma_updates, delta_m_gamma, n, tf, ))
+    # p = mp.Pool(nchains, initializer=_mp_dream_init, initargs=(history_arr, current_position_arr, shared_nchains, crossover_probabilities, ncrossover_updates, delta_m, gamma_probabilities, ngamma_updates, delta_m_gamma, n, tf, ))
 
     return p
 
