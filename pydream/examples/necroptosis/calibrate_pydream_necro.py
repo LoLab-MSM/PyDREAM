@@ -269,7 +269,8 @@ sp_p24r = SampledParam(norm, loc=np.log10(4.354384e-02), scale=2.0)
 sampled_params_list.append(sp_p24r)
 sp_p25f = SampledParam(norm, loc=np.log10(1.278903), scale=2.0)
 sampled_params_list.append(sp_p25f)
-
+print(list(sampled_params_list))
+quit()
 #Starting arrays from PSO output for each chain
 pso0 = np.load('optimizer_best_100_100_9_20_necromulti_pso0.npy')
 pso1 = np.load('optimizer_best_100_100_9_20_necromulti_pso1.npy')
