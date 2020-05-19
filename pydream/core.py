@@ -27,6 +27,9 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
         Whether run is a continuation of an earlier run.  Pass this with the model_name argument to automatically load previous history and crossover probability files.  Default: False
     verbose: Boolean, optional
         Whether to print verbose output (including acceptance or rejection of moves and the current acceptance rate).  Default: True
+    nverbose: int, optional
+        Rate at which the acceptance rate is printed if verbose is set to True. Every n-th iteration the acceptance rate
+        will be printed and added to the acceptance rate file. Default: 10
     tempering: Boolean, optional
         Whether to use parallel tempering for the DREAM chains.  Warning: this feature is untested.  Use at your own risk! Default: False
     mp_context: multiprocessing context or None.
@@ -93,16 +96,10 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
             log_ps = [val[1] for val in returned_vals]
             acceptance_rates = [val[2] for val in returned_vals]
 
-            if restart:
-                for chain in range(nchains):
-                    acceptance_rates_total = np.load(f'{model_prefix}_acceptance_rates_chain{chain}.npy')
-                    acceptance_rates_total = np.append(acceptance_rates_total, acceptance_rates[chain])
-                    np.save(f'{model_prefix}_acceptance_rates_chain{chain}.npy',
-                            acceptance_rates_total)
-            else:
-                for chain in range(nchains):
-                    np.save(f'{model_prefix}_acceptance_rates_chain{chain}.npy',
-                            acceptance_rates[chain])
+            for chain in range(nchains):
+                filename = f'{model_prefix}_acceptance_rates_chain{chain}.txt'
+                with open(filename, 'ab') as f:
+                    np.savetxt(f, acceptance_rates[chain])
     finally:
         pool.close()
         pool.join()
