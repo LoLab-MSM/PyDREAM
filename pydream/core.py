@@ -53,15 +53,24 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
         parameters = [parameters]
 
     model = Model(likelihood=likelihood, sampled_parameters=parameters)
-    
+    model_prefix = kwargs['model_name']
+
     if restart:
         step_instance = Dream(model=model, variables=parameters,
                               history_file=kwargs['model_name'] + '_DREAM_chain_history.npy',
                               crossover_file=kwargs['model_name'] + '_DREAM_chain_adapted_crossoverprob.npy',
                               gamma_file=kwargs['model_name'] + '_DREAM_chain_adapted_gammalevelprob.npy',
                               verbose=verbose, mp_context=mp_context, **kwargs)
+
+        # Reload acceptance rate data
+        chains_naccepts_iterations = []
+        for chain in range(nchains):
+            na = np.load(f'{model_prefix}_naccepts_chain{chain}.npy')
+            chains_naccepts_iterations.append(na)
+
     else:
         step_instance = Dream(model=model, variables=parameters, verbose=verbose, mp_context=mp_context, **kwargs)
+        chains_naccepts_iterations = [np.zeros((2, 1), dtype=np.int) for _ in range(nchains)]
 
     pool = _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=start, mp_context=mp_context)
     try:
@@ -72,14 +81,28 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
         else:
 
             if type(start) is list:
-                args = zip([step_instance]*nchains, [niterations]*nchains, start, [verbose]*nchains, [nverbose]*nchains)
+                args = zip([step_instance]*nchains, [niterations]*nchains, start, [verbose]*nchains,
+                           [nverbose]*nchains, list(range(nchains)), chains_naccepts_iterations)
 
             else:
-                args = list(zip([step_instance]*nchains, [niterations]*nchains, [start]*nchains, [verbose]*nchains, [nverbose]*nchains))
+                args = list(zip([step_instance]*nchains, [niterations]*nchains, [start]*nchains, [verbose]*nchains,
+                                [nverbose]*nchains, list(range(nchains)), chains_naccepts_iterations))
 
             returned_vals = pool.map(_sample_dream, args)
             sampled_params = [val[0] for val in returned_vals]
             log_ps = [val[1] for val in returned_vals]
+            acceptance_rates = [val[2] for val in returned_vals]
+
+            if restart:
+                for chain in range(nchains):
+                    acceptance_rates_total = np.load(f'{model_prefix}_acceptance_rates_chain{chain}.npy')
+                    acceptance_rates_total = np.append(acceptance_rates_total, acceptance_rates[chain])
+                    np.save(f'{model_prefix}_acceptance_rates_chain{chain}.npy',
+                            acceptance_rates_total)
+            else:
+                for chain in range(nchains):
+                    np.save(f'{model_prefix}_acceptance_rates_chain{chain}.npy',
+                            acceptance_rates[chain])
     finally:
         pool.close()
         pool.join()
@@ -88,21 +111,28 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
 
 def _sample_dream(args):
 
-    try: 
+    try:
         dream_instance = args[0]
         iterations = args[1]
         start = args[2]
         verbose = args[3]
         nverbose = args[4]
+        chain_idx = args[5]
+        naccepts_iterations_total = args[6]
         step_fxn = getattr(dream_instance, 'astep')
         sampled_params = np.empty((iterations, dream_instance.total_var_dimension))
         log_ps = np.empty((iterations, 1))
+        acceptance_rates = np.zeros(int(np.floor(iterations / nverbose)))
         q0 = start
-        naccepts = 0
+        iterations_total = np.sum(naccepts_iterations_total[1])
+        naccepts = naccepts_iterations_total[0][-1]
         naccepts100win = 0
-        for iteration in range(iterations):
+        acceptance_counter = 0
+        for iteration_idx, iteration in enumerate(range(iterations_total, iterations_total + iterations)):
             if iteration%nverbose == 0:
                 acceptance_rate = float(naccepts)/(iteration+1)
+                acceptance_rates[acceptance_counter] = acceptance_rate
+                acceptance_counter += 1
                 if verbose:
                     print('Iteration: ',iteration,' acceptance rate: ',acceptance_rate)
                 if iteration%100 == 0:
@@ -111,47 +141,50 @@ def _sample_dream(args):
                         print('Iteration: ',iteration,' acceptance rate over last 100 iterations: ',acceptance_rate_100win)
                     naccepts100win = 0
             old_params = q0
-            sampled_params[iteration], log_prior , log_like = step_fxn(q0)
-            log_ps[iteration] = log_like + log_prior
-            q0 = sampled_params[iteration]
+            sampled_params[iteration_idx], log_prior, log_like = step_fxn(q0)
+            log_ps[iteration_idx] = log_like + log_prior
+            q0 = sampled_params[iteration_idx]
             if old_params is None:
                 old_params = q0
 
             if np.any(q0 != old_params):
                 naccepts += 1
                 naccepts100win += 1
-            
+
+        naccepts_iterations_total = np.append(naccepts_iterations_total, np.array([[naccepts], [iterations]]), axis=1)
+        np.save(f'{dream_instance.model_name}_naccepts_chain{chain_idx}.npy', naccepts_iterations_total)
+
     except Exception as e:
         traceback.print_exc()
         print()
         raise e
 
-    return sampled_params, log_ps
+    return sampled_params, log_ps, acceptance_rates
 
 def _sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose):
-    
+
     T = np.zeros((nchains))
     T[0] = 1.
     for i in range(nchains):
         T[i] = np.power(.001, (float(i)/nchains))
-    
-    step_instances = [step_instance]*nchains   
-    
+
+    step_instances = [step_instance]*nchains
+
     if type(start) is list:
         args = list(zip(step_instances, start, T, [None]*nchains, [None]*nchains))
     else:
         args = list(zip(step_instances, [start]*nchains, T, [None]*nchains, [None]*nchains))
-        
+
     sampled_params = np.zeros((nchains, niterations*2, step_instance.total_var_dimension))
     log_ps = np.zeros((nchains, niterations*2, 1))
-    
+
     q0 = start
     naccepts = np.zeros((nchains))
     naccepts100win = np.zeros((nchains))
     nacceptsT = np.zeros((nchains))
     nacceptsT100win = np.zeros((nchains))
     ttestsper100 = 100./nchains
-    
+
     for iteration in range(niterations):
         itidx = iteration*2
         if iteration%10 == 0:
@@ -176,8 +209,8 @@ def _sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose):
         logprinews = [val[1] for val in returned_vals]
         loglikenews = [val[2] for val in returned_vals]
         dream_instances = [val[3] for val in returned_vals]
-        logpnews = [T[i]*loglikenews[i] + logprinews[i] for i in range(nchains)]             
-        
+        logpnews = [T[i]*loglikenews[i] + logprinews[i] for i in range(nchains)]
+
         for chain in range(nchains):
             sampled_params[chain][itidx] = qnews[chain]
             log_ps[chain][itidx] = logpnews[chain]
@@ -189,17 +222,16 @@ def _sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose):
         T2 = T[random_chains[1]]
         logp1 = logpnews[random_chains[0]]
         logp2 = logpnews[random_chains[1]]
-        
-            
+
         alpha = ((T1*loglike2)+(T2*loglike1))-((T1*loglike1)+(T2*loglike2))
-        
+
         if np.log(np.random.uniform()) < alpha:
             if verbose:
                 print('Accepted temperature swap of chains: ',random_chains,' at temperatures: ',T1,' and ',T2,' and logps: ',logp1,' and ',logp2)
             nacceptsT[random_chains[0]] += 1
             nacceptsT[random_chains[1]] += 1
             nacceptsT100win[random_chains[0]] += 1
-            nacceptsT100win[random_chains[1]] += 1    
+            nacceptsT100win[random_chains[1]] += 1
             old_qs = list(qnews)
             old_logps = list(logpnews)
             old_loglikes = list(loglikenews)
@@ -215,11 +247,11 @@ def _sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose):
         else:
             if verbose:
                 print('Did not accept temperature swap of chains: ',random_chains,' at temperatures: ',T1,' and ',T2,' and logps: ',logp1,' and ',logp2)
-        
+
         for chain in range(nchains):
             sampled_params[chain][itidx+1] = qnews[chain]
             log_ps[chain][itidx+1] = logpnews[chain]
-                
+
         for i, q in enumerate(qnews):
             try:
                 if not np.all(q == q0[i]):
@@ -228,12 +260,12 @@ def _sample_dream_pt(nchains, niterations, step_instance, start, pool, verbose):
             except TypeError:
                 #On first iteration without starting points this will fail because q0 == None
                 pass
-            
+
         args = list(zip(dream_instances, qnews, T, loglikenews, logprinews))
         q0 = qnews
-    
+
     return sampled_params, log_ps
-            
+
 
 def _sample_dream_pt_chain(args):
 
@@ -244,11 +276,11 @@ def _sample_dream_pt_chain(args):
     last_logpri = args[4]
     step_fxn = getattr(dream_instance, 'astep')
     q1, logprior1, loglike1 = step_fxn(start, T, last_loglike, last_logpri)
-    
+
     return q1, logprior1, loglike1, dream_instance
 
 def _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=None, mp_context=None):
-    
+
     min_njobs = (2*len(step_instance.DEpairs))+1
     if nchains < min_njobs:
         raise Exception('Dream should be run with at least (2*DEpairs)+1 number of chains.  For current algorithmic settings, set njobs>=%s.' %str(min_njobs))
@@ -266,12 +298,12 @@ def _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=None, mp_
             arr_dim = ((np.floor(nchains*niterations/step_instance.history_thin)+nchains)*step_instance.total_var_dimension)+(step_instance.nseedchains*step_instance.total_var_dimension)
         else:
             arr_dim = np.floor(((nchains*niterations/step_instance.history_thin)*step_instance.total_var_dimension))+(step_instance.nseedchains*step_instance.total_var_dimension)
-            
+
     min_nseedchains = 2*len(step_instance.DEpairs)*nchains
-    
+
     if step_instance.nseedchains < min_nseedchains:
         raise Exception('The size of the seeded starting history is insufficient.  Increase nseedchains>=%s.' %str(min_nseedchains))
-        
+
     current_position_dim = nchains*step_instance.total_var_dimension
     # Get context to define arrays
     if mp_context is None:
@@ -295,10 +327,10 @@ def _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=None, mp_
     shared_nchains = ctx.Value('i', nchains)
     n = ctx.Value('i', 0)
     tf = ctx.Value('c', b'F')
-    
+
     if step_instance.crossover_burnin == None:
         step_instance.crossover_burnin = int(np.floor(niterations/10))
-        
+
     if start_pt != None:
         if step_instance.start_random:
             print('Warning: start position provided but random_start set to True.  Overrode random_start value and starting walk at provided start position.')
