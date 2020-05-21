@@ -8,7 +8,7 @@ Created on Thu Oct  9 16:50:59 2014
 import unittest
 from os import remove
 
-import multiprocessing as mp
+import multiprocess as mp
 import numpy as np
 import pydream.Dream_shared_vars
 from pydream.Dream import Dream

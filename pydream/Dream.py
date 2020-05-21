@@ -5,8 +5,8 @@ import random
 from . import Dream_shared_vars
 from datetime import datetime
 import traceback
-import multiprocessing as mp
-from multiprocessing import pool
+import multiprocess as mp
+from multiprocess import pool
 import time
 
 class Dream():
@@ -1015,7 +1015,7 @@ class NonDaemonMixin(object):
         pass
 
 
-from multiprocessing import context
+from multiprocess import context
 
 
 # Exists on all platforms
