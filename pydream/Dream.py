@@ -70,7 +70,13 @@ class Dream():
         self.mp_context = mp_context
         # Set model and variable attributes (if no variables passed, set to all parameters)
         self.model = model
-        self.model_name = model_name
+        if not model_name:
+            # Replace `:` for `_` because colons cause problems in windows paths
+            prefix = datetime.now().strftime('%Y_%m_%d_%H:%M:%S').replace(':', '_') + '_'
+        else:
+            prefix = model_name + '_'
+        self.model_name = prefix
+
         if variables is None:
             self.variables = self.model.sampled_parameters
         else:
@@ -937,12 +943,8 @@ class Dream():
 
         Dream_shared_vars.count.value += 1
         if self.save_history and len_history == (nhistoryrecs+1)*ndimensions:
-            if not self.model_name:
-                prefix = datetime.now().strftime('%Y_%m_%d_%H:%M:%S')+'_'
-            else:
-                prefix = self.model_name+'_'
 
-            self.save_history_to_disc(np.frombuffer(Dream_shared_vars.history.get_obj()), prefix)
+            self.save_history_to_disc(np.frombuffer(Dream_shared_vars.history.get_obj()), self.model_name)
             
     def save_history_to_disc(self, history, prefix):
         """Save history and crossover probabilities to files at end of run.
