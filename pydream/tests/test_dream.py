@@ -575,8 +575,10 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
         start = np.array([-7, 8, 1.2, 0])
         verbose = False
         nverbose = 10
-        args = [dream, iterations, start, verbose, nverbose]
-        sampled_params, logps = _sample_dream(args)
+        chain_idx = 0
+        chains_naccepts_iterations = np.zeros((2, 1), dtype=np.int)
+        args = [dream, iterations, start, verbose, nverbose, chain_idx, chains_naccepts_iterations]
+        sampled_params, logps, acceptance_rates = _sample_dream(args)
 
         self.assertEqual(len(sampled_params), 10)
         self.assertEqual(len(sampled_params[0]), 4)
