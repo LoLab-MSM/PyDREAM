@@ -119,7 +119,10 @@ def _sample_dream(args):
         step_fxn = getattr(dream_instance, 'astep')
         sampled_params = np.empty((iterations, dream_instance.total_var_dimension))
         log_ps = np.empty((iterations, 1))
-        acceptance_rates = np.zeros(int(np.floor(iterations / nverbose)))
+        acceptance_rates_size = int(np.floor(iterations / nverbose))
+        if acceptance_rates_size == 0:
+            acceptance_rates_size = 1
+        acceptance_rates = np.zeros(acceptance_rates_size)
         q0 = start
         iterations_total = np.sum(naccepts_iterations_total[1])
         naccepts = naccepts_iterations_total[0][-1]
