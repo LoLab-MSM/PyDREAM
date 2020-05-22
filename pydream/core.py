@@ -56,13 +56,13 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
         parameters = [parameters]
 
     model = Model(likelihood=likelihood, sampled_parameters=parameters)
-    model_prefix = kwargs['model_name']
 
     if restart:
+        model_prefix = kwargs['model_name']
         step_instance = Dream(model=model, variables=parameters,
-                              history_file=kwargs['model_name'] + '_DREAM_chain_history.npy',
-                              crossover_file=kwargs['model_name'] + '_DREAM_chain_adapted_crossoverprob.npy',
-                              gamma_file=kwargs['model_name'] + '_DREAM_chain_adapted_gammalevelprob.npy',
+                              history_file=model_prefix + '_DREAM_chain_history.npy',
+                              crossover_file=model_prefix + '_DREAM_chain_adapted_crossoverprob.npy',
+                              gamma_file=model_prefix + '_DREAM_chain_adapted_gammalevelprob.npy',
                               verbose=verbose, mp_context=mp_context, **kwargs)
 
         # Reload acceptance rate data
@@ -97,7 +97,7 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
             acceptance_rates = [val[2] for val in returned_vals]
 
             for chain in range(nchains):
-                filename = f'{model_prefix}_acceptance_rates_chain{chain}.txt'
+                filename = f'{step_instance.model_name}_acceptance_rates_chain{chain}.txt'
                 with open(filename, 'ab') as f:
                     np.savetxt(f, acceptance_rates[chain])
     finally:
