@@ -72,7 +72,7 @@ class Dream():
         self.model = model
         if not model_name:
             # Replace `:` for `_` because colons cause problems in windows paths
-            prefix = datetime.now().strftime('%Y_%m_%d_%H:%M:%S').replace(':', '_') + '_'
+            prefix = datetime.now().strftime('%Y_%m_%d_%H_%M_%S_')
         else:
             prefix = model_name + '_'
         self.model_name = prefix

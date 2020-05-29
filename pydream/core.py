@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import collections
 import multiprocess as mp
 from . import Dream_shared_vars
 from .Dream import Dream, DreamPool
@@ -73,7 +74,7 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
 
     else:
         step_instance = Dream(model=model, variables=parameters, verbose=verbose, mp_context=mp_context, **kwargs)
-        chains_naccepts_iterations = [np.zeros((2, 1), dtype=np.int) for _ in range(nchains)]
+        chains_naccepts_iterations = [np.zeros((2, 1), dtype=np.int)] * nchains
 
     pool = _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=start, mp_context=mp_context)
     try:
@@ -83,13 +84,10 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
 
         else:
 
-            if type(start) is list:
-                args = zip([step_instance]*nchains, [niterations]*nchains, start, [verbose]*nchains,
-                           [nverbose]*nchains, list(range(nchains)), chains_naccepts_iterations)
-
-            else:
-                args = list(zip([step_instance]*nchains, [niterations]*nchains, [start]*nchains, [verbose]*nchains,
-                                [nverbose]*nchains, list(range(nchains)), chains_naccepts_iterations))
+            if not isinstance(start, collections.abc.Iterable):
+                start = [start] * nchains
+            args = list(zip([step_instance] * nchains, [niterations] * nchains, start, [verbose] * nchains,
+                            [nverbose]*nchains, list(range(nchains)), chains_naccepts_iterations))
 
             returned_vals = pool.map(_sample_dream, args)
             sampled_params = [val[0] for val in returned_vals]
