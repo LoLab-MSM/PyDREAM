@@ -627,6 +627,34 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
         self.assertTrue((logprior_new + loglike_new) >= -400)
     
 class Test_Dream_Full_Algorithm(unittest.TestCase):
+    def test_model_with_restart(self):
+        """Test that pydream restarts."""
+        self.param, self.like = onedmodel()
+        model = Model(self.like, self.param)
+        model_name = 'test_history_correct'
+        step = Dream(model=model, save_history=True, history_thin=1, model_name='test_history_correct',
+                     adapt_crossover=False)
+        sampled_params, logps = run_dream(self.param, self.like, niterations=10, nchains=5, save_history=True,
+                                          history_thin=1, model_name=model_name, adapt_crossover=False,
+                                          verbose=False)
+
+        starts = [sampled_params[chain][-1, :] for chain in range(5)]
+        sampled_params, logps = run_dream(self.param, self.like, niterations=10, nchains=5, save_history=True,
+                                          history_thin=1, model_name=model_name, adapt_crossover=False,
+                                          verbose=False, start=starts, restart=True)
+        remove('test_history_correct_DREAM_chain_history.npy')
+        remove('test_history_correct_DREAM_chain_adapted_crossoverprob.npy')
+        remove('test_history_correct_DREAM_chain_adapted_gammalevelprob.npy')
+        remove('test_history_correct_naccepts_chain0.npy')
+        remove('test_history_correct_naccepts_chain1.npy')
+        remove('test_history_correct_naccepts_chain2.npy')
+        remove('test_history_correct_naccepts_chain3.npy')
+        remove('test_history_correct_naccepts_chain4.npy')
+        remove('test_history_correct_acceptance_rates_chain0.txt')
+        remove('test_history_correct_acceptance_rates_chain1.txt')
+        remove('test_history_correct_acceptance_rates_chain2.txt')
+        remove('test_history_correct_acceptance_rates_chain3.txt')
+        remove('test_history_correct_acceptance_rates_chain4.txt')
 
     def test_history_correct_after_sampling_simple_model(self):
         """Test that the history saved matches with the returned sampled parameter values for a one-dimensional test model."""

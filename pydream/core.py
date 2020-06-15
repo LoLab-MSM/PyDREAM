@@ -95,7 +95,7 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
             acceptance_rates = [val[2] for val in returned_vals]
 
             for chain in range(nchains):
-                filename = f'{step_instance.model_name}_acceptance_rates_chain{chain}.txt'
+                filename = f'{step_instance.model_name}acceptance_rates_chain{chain}.txt'
                 with open(filename, 'ab') as f:
                     np.savetxt(f, acceptance_rates[chain])
     finally:
@@ -150,7 +150,7 @@ def _sample_dream(args):
                 naccepts100win += 1
 
         naccepts_iterations_total = np.append(naccepts_iterations_total, np.array([[naccepts], [iterations]]), axis=1)
-        np.save(f'{dream_instance.model_name}_naccepts_chain{chain_idx}.npy', naccepts_iterations_total)
+        np.save(f'{dream_instance.model_name}naccepts_chain{chain_idx}.npy', naccepts_iterations_total)
 
     except Exception as e:
         traceback.print_exc()
