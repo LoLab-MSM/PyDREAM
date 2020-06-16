@@ -630,10 +630,8 @@ class Test_Dream_Full_Algorithm(unittest.TestCase):
     def test_model_with_restart(self):
         """Test that pydream restarts."""
         self.param, self.like = onedmodel()
-        model = Model(self.like, self.param)
         model_name = 'test_history_correct'
-        step = Dream(model=model, save_history=True, history_thin=1, model_name='test_history_correct',
-                     adapt_crossover=False)
+
         sampled_params, logps = run_dream(self.param, self.like, niterations=10, nchains=5, save_history=True,
                                           history_thin=1, model_name=model_name, adapt_crossover=False,
                                           verbose=False)
