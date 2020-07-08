@@ -7,6 +7,7 @@ Created on Thu Oct  9 16:50:59 2014
 
 import unittest
 from os import remove
+from pathlib import Path
 
 import multiprocess as mp
 import numpy as np
@@ -477,6 +478,12 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
         remove('test_history_loading_DREAM_chain_adapted_crossoverprob.npy')
         remove('test_history_loading_DREAM_chain_adapted_gammalevelprob.npy')
         remove('test_history_loading_DREAM_chain_history.npy')
+
+        for p in Path(".").glob("test_history_loading_naccepts*.npy"):
+            p.unlink()
+
+        for p in Path(".").glob("test_history_loading_acceptance_rates*.txt"):
+            p.unlink()
         
     def test_crossover_file_loading(self):
         """Test that when a crossover file is loaded the crossover values are set to the file values and not adapted."""
@@ -495,6 +502,12 @@ class Test_Dream_Algorithm_Components(unittest.TestCase):
         remove('testing_crossover_load_DREAM_chain_adapted_gammalevelprob.npy')
         remove('testing_crossoverval_load_DREAM.npy')
         remove('testing_crossover_load_DREAM_chain_history.npy')
+
+        for p in Path(".").glob("testing_crossover_load_naccepts*.npy"):
+            p.unlink()
+
+        for p in Path(".").glob("testing_crossover_load_acceptance_rates*.txt"):
+            p.unlink()
 
     def test_astep_onedmodel(self):
         """Test that a single step with a one-dimensional model returns values of the expected type and a move that is expected or not given the test logp."""
@@ -643,16 +656,12 @@ class Test_Dream_Full_Algorithm(unittest.TestCase):
         remove('test_history_correct_DREAM_chain_history.npy')
         remove('test_history_correct_DREAM_chain_adapted_crossoverprob.npy')
         remove('test_history_correct_DREAM_chain_adapted_gammalevelprob.npy')
-        remove('test_history_correct_naccepts_chain0.npy')
-        remove('test_history_correct_naccepts_chain1.npy')
-        remove('test_history_correct_naccepts_chain2.npy')
-        remove('test_history_correct_naccepts_chain3.npy')
-        remove('test_history_correct_naccepts_chain4.npy')
-        remove('test_history_correct_acceptance_rates_chain0.txt')
-        remove('test_history_correct_acceptance_rates_chain1.txt')
-        remove('test_history_correct_acceptance_rates_chain2.txt')
-        remove('test_history_correct_acceptance_rates_chain3.txt')
-        remove('test_history_correct_acceptance_rates_chain4.txt')
+
+        for p in Path(".").glob("test_history_correct_naccepts*.npy"):
+            p.unlink()
+
+        for p in Path(".").glob("test_history_correct_acceptance_rates*.txt"):
+            p.unlink()
 
     def test_history_correct_after_sampling_simple_model(self):
         """Test that the history saved matches with the returned sampled parameter values for a one-dimensional test model."""
@@ -728,9 +737,16 @@ class Test_Dream_Full_Algorithm(unittest.TestCase):
         self.assertFalse((reshaped_history<lowerbound).any())
         self.assertFalse((reshaped_history>upperbound).any())
 
+        # Remove reporting files
         remove('test_boundaries_DREAM_chain_adapted_crossoverprob.npy')
         remove('test_boundaries_DREAM_chain_adapted_gammalevelprob.npy')
         remove('test_boundaries_DREAM_chain_history.npy')
+
+        for p in Path(".").glob("test_boundaries_naccepts*.npy"):
+            p.unlink()
+
+        for p in Path(".").glob("test_boundaries_acceptance_rates*.txt"):
+            p.unlink()
 
 
 class Test_DREAM_examples(unittest.TestCase):
@@ -754,6 +770,12 @@ class Test_DREAM_examples(unittest.TestCase):
         remove('corm_dreamzs_5chain_DREAM_chain_adapted_crossoverprob.npy')
         remove('corm_dreamzs_5chain_DREAM_chain_adapted_gammalevelprob.npy')
         remove('corm_dreamzs_5chain_DREAM_chain_history.npy')
+
+        for p in Path(".").glob("corm_dreamzs_5chain_naccepts*.npy"):
+            p.unlink()
+
+        for p in Path(".").glob("corm_dreamzs_5chain_acceptance_rates*.txt"):
+            p.unlink()
 
     def test_mixturemodel_example(self):
         """Test that the mixture model example runs and returns values of the expected shape."""
@@ -795,6 +817,12 @@ class Test_DREAM_examples(unittest.TestCase):
         self.assertEqual(len(logps[0][0]), 1)
         remove('ndim_gaussian_seed.npy')
 
+        for p in Path(".").glob("ndim_gaussian_naccepts*.npy"):
+            p.unlink()
+
+        for p in Path(".").glob("ndim_gaussian_acceptance_rates*.txt"):
+            p.unlink()
+
     def test_robertson_example(self):
         """Test that the Robertson example runs and returns values of the expected shape."""
         nchains = robertson_kwargs['nchains']
@@ -814,6 +842,12 @@ class Test_DREAM_examples(unittest.TestCase):
         self.assertEqual(len(logps[0]), 100)
         self.assertEqual(len(logps[0][0]), 1)
 
+        for p in Path(".").glob("robertson_dreamzs_5chain_naccepts*.npy"):
+            p.unlink()
+
+        for p in Path(".").glob("robertson_dreamzs_5chain_acceptance_rates*.txt"):
+            p.unlink()
+
     def test_robertson_nopysb_example(self):
         """Test that the Robertson example without PySB runs and returns values of the expected shape."""
 
@@ -832,6 +866,12 @@ class Test_DREAM_examples(unittest.TestCase):
         self.assertEqual(len(sampled_params[0][0]), 3)
         self.assertEqual(len(logps[0]), 100)
         self.assertEqual(len(logps[0][0]), 1)
+
+        for p in Path(".").glob("robertson_nopysb_dreamzs_5chain_naccepts*.npy"):
+            p.unlink()
+
+        for p in Path(".").glob("robertson_nopysb_dreamzs_5chain_acceptance_rates*.txt"):
+            p.unlink()
 
 if __name__ == '__main__':
     unittest.main()
