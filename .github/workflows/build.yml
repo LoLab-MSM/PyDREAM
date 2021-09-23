@@ -27,4 +27,4 @@ jobs:
       run: |
         python -m pip install .
     - name: Run nosetests
-      Run: 30 nosetests
+      run: 30 nosetests
