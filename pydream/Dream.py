@@ -285,8 +285,7 @@ class Dream(object):
         return q0
 
     def astep(self, q0, temperature=1., last_loglike=None, last_logprior=None):
-        self.verbose = False
-        self.save_history = False
+
         cpu_name = mp.current_process().name
         # On first iteration, check that shared variables have been initialized
         # (which only occurs if multiple chains have been started).
@@ -310,7 +309,6 @@ class Dream(object):
 
         logger.debug(f'{cpu_name} set_snooker')
         run_snooker = self.set_snooker()
-        run_snooker = True
         logger.debug(f'{cpu_name} set_CR')
         crossover_rates = self.set_crossover_rates(self.CR_probabilities, self.CR_values)
 
@@ -512,18 +510,7 @@ class Dream(object):
                     self.CR_probabilities = Dream_shared_vars.cross_probs[0:self.nCR]
 
         self.iter += 1
-        # with Dream_shared_vars.sync_counter.get_lock():
-        #     Dream_shared_vars.sync_counter[self.chain_n-1] = self.iter
-        #
-        # def check():
-        #     with Dream_shared_vars.sync_counter.get_lock():
-        #         tmp = np.frombuffer(Dream_shared_vars.sync_counter.get_obj())
-        #         return np.all(tmp == self.iter)
-        #
-        # progress = check()
-        # while not progress:
-        #     time.sleep(5)
-        #     progress = check()
+
         logger.debug(f"{self.iter} chains synced")
         return q_new, self.last_prior, self.last_like
 
