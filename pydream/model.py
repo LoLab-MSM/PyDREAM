@@ -34,7 +34,7 @@ class Model(object):
         with ProcessPoolExecutor(max_workers=1) as executor:
             try:
                 future = executor.submit(self.likelihood, q0)
-                loglike = future.result(timeout=5)
+                loglike = future.result(timeout=10)
             except TimeoutError:
                 loglike = -np.inf
         return prior_logp, loglike
