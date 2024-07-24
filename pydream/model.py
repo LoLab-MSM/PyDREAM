@@ -5,8 +5,8 @@ Created on Tue Jan 12 16:40:32 2016
 @author: Erin
 """
 import numpy as np
-from concurrent.futures import ProcessPoolExecutor
-from concurrent.futures._base import TimeoutError
+from pebble import ProcessPool
+from concurrent.futures import TimeoutError
 
 
 class Model(object):
@@ -31,10 +31,12 @@ class Model(object):
             var_start += param.dsize
 
         # Evaluate logp(s)
-        with ProcessPoolExecutor(max_workers=1) as executor:
+        with ProcessPool(max_workers=1) as pool:
             try:
-                future = executor.submit(self.likelihood, q0)
-                loglike = future.result(timeout=10)
+                future = pool.schedule(self.likelihood, [q0], timeout=5)
+                loglike = future.result()
             except TimeoutError:
                 loglike = -np.inf
+                print('TimeoutError')
+
         return prior_logp, loglike
