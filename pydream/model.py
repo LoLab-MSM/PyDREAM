@@ -10,14 +10,14 @@ from concurrent.futures import TimeoutError
 
 
 class Model(object):
-    
+
     def __init__(self, likelihood, sampled_parameters):
         self.likelihood = likelihood
         if type(sampled_parameters) is list:
             self.sampled_parameters = sampled_parameters
         else:
             self.sampled_parameters = [sampled_parameters]
-        
+
     def total_logp(self, q0):
         prior_logp = 0
         var_start = 0
@@ -32,11 +32,19 @@ class Model(object):
 
         # Evaluate logp(s)
         with ProcessPool(max_workers=1) as pool:
+            future = pool.schedule(self.likelihood, [q0], timeout=5)
             try:
-                future = pool.schedule(self.likelihood, [q0], timeout=5)
                 loglike = future.result()
             except TimeoutError:
+                future.cancel()  # Be explicit
                 loglike = -np.inf
                 print('TimeoutError')
+            finally:
+                pool.close()
+                pool.join()
+
+        # 🔍 Memory check after likelihood evaluation
+        import psutil, os
+        print(f"Memory usage: {psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2:.2f} MB")
 
         return prior_logp, loglike
