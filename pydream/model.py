@@ -11,12 +11,13 @@ from concurrent.futures import TimeoutError
 
 class Model(object):
 
-    def __init__(self, likelihood, sampled_parameters):
+    def __init__(self, likelihood, sampled_parameters, timeout):
         self.likelihood = likelihood
         if type(sampled_parameters) is list:
             self.sampled_parameters = sampled_parameters
         else:
             self.sampled_parameters = [sampled_parameters]
+        self.timeout = timeout
 
     def total_logp(self, q0):
         prior_logp = 0
@@ -32,7 +33,7 @@ class Model(object):
 
         # Evaluate logp(s)
         with ProcessPool(max_workers=1) as pool:
-            future = pool.schedule(self.likelihood, [q0], timeout=5)
+            future = pool.schedule(self.likelihood, [q0], timeout=self.timeout)
             try:
                 loglike = future.result()
             except TimeoutError:

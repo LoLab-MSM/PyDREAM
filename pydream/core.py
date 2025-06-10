@@ -10,7 +10,7 @@ from functools import partial
 
 
 def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, restart=False, verbose=True,
-              nverbose=10, tempering=False, mp_context=None, **kwargs):
+              nverbose=10, tempering=False, mp_context=None, timeout=5, **kwargs):
     """Run DREAM given a set of parameters with priors and a likelihood function.
 
     Parameters
@@ -55,7 +55,7 @@ def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, 
     if type(parameters) is not list:
         parameters = [parameters]
 
-    model = Model(likelihood=likelihood, sampled_parameters=parameters)
+    model = Model(likelihood=likelihood, sampled_parameters=parameters, timeout=timeout)
 
     if restart:
         step_instance = Dream(model=model, variables=parameters,
