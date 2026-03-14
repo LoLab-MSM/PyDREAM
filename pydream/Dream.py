@@ -98,8 +98,8 @@ class Dream(object):
     """
 
     def __init__(self, model, variables=None, nseedchains=None, nCR=3, adapt_crossover=True, adapt_gamma=False,
-                 crossover_burnin=None, DEpairs=1, lamb=.05, zeta=1e-12, history_thin=10, snooker=.10,
-                 p_gamma_unity=.20, gamma_levels=1, start_random=True, save_history=True, history_file=False,
+                 crossover_burnin=None, DEpairs=1, lamb=0.05, zeta=1e-12, history_thin=10, snooker=0.10,
+                 p_gamma_unity=0.20, gamma_levels=1, start_random=True, save_history=True, history_file=False,
                  crossover_file=False, gamma_file=False, multitry=False, parallel=False, verbose=False,
                  model_name=False, hardboundaries=True, mp_context=None, **kwargs):
 
