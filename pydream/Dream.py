@@ -70,6 +70,11 @@ class Dream(object):
         Epsilon in DREAM papers.  Randomization term. Default = 1e-12
     history_thin : int
         Thinning rate for history to reduce storage requirements.  Every n-th iteration will be added to the history.
+    max_history_records : int or None
+        Maximum number of history records to retain when loading a history file for a restart.
+        If the loaded history exceeds this size, it is reduced by stratified subsampling before
+        being copied into shared memory. Set to None to retain the complete history.
+        Default = 3,000,000.
     snooker : float
         Probability of proposing a snooker update.  Default is .1.  To forego snooker updates, set to 0.
     p_gamma_unity : float
@@ -98,7 +103,8 @@ class Dream(object):
     """
 
     def __init__(self, model, variables=None, nseedchains=None, nCR=3, adapt_crossover=True, adapt_gamma=False,
-                 crossover_burnin=None, DEpairs=1, lamb=0.05, zeta=1e-12, history_thin=10, snooker=0.10,
+                 crossover_burnin=None, DEpairs=1, lamb=0.05, zeta=1e-12, history_thin=10,
+                 max_history_records=3_000_000, snooker=0.10,
                  p_gamma_unity=0.20, gamma_levels=1, start_random=True, save_history=True, history_file=False,
                  crossover_file=False, gamma_file=False, multitry=False, parallel=False, verbose=False,
                  model_name=False, hardboundaries=True, mp_context=None, **kwargs):
@@ -242,6 +248,11 @@ class Dream(object):
         self.save_history = save_history
         self.history_file = history_file
         self.history_thin = history_thin
+        if max_history_records is not None:
+            if not isinstance(max_history_records, (int, np.integer)) or max_history_records <= 0:
+                raise ValueError('max_history_records must be a positive integer or None.')
+            max_history_records = int(max_history_records)
+        self.max_history_records = max_history_records
         self.start_random = start_random
         self.verbose = verbose
         self.logp = self.model.total_logp

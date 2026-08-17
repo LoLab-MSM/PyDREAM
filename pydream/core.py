@@ -9,6 +9,20 @@ import traceback
 from functools import partial
 
 
+def _stratified_history_indices(n_records, max_records):
+    """Return deterministic stratified indices spanning the full history."""
+    bin_starts = (
+        np.arange(max_records, dtype=np.int64) * n_records
+    ) // max_records
+    bin_ends = (
+        np.arange(1, max_records + 1, dtype=np.int64) * n_records
+    ) // max_records
+    bin_widths = bin_ends - bin_starts
+    rng = np.random.RandomState(0)
+    offsets = (rng.random_sample(max_records) * bin_widths).astype(np.int64)
+    return bin_starts + offsets
+
+
 def run_dream(parameters, likelihood, nchains=5, niterations=50000, start=None, restart=False, verbose=True,
               nverbose=10, tempering=False, mp_context=None, timeout=5, **kwargs):
     """Run DREAM given a set of parameters with priors and a likelihood function.
@@ -305,9 +319,38 @@ def _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=None, mp_
             'Dream should be run with at least (2*DEpairs)+1 number of chains.  For current algorithmic settings, set njobs>=%s.' % str(
                 min_njobs))
     if step_instance.history_file != False:
-        old_history = np.load(step_instance.history_file)
-        len_old_history = len(old_history.flatten())
-        nold_history_records = len_old_history / step_instance.total_var_dimension
+        old_history = np.load(step_instance.history_file, mmap_mode='r')
+        ndim = step_instance.total_var_dimension
+
+        if old_history.size % ndim != 0:
+            raise ValueError(
+                'Loaded DREAM history size is not evenly divisible by the '
+                'number of sampled parameter dimensions.'
+            )
+
+        nold_history_records = old_history.size // ndim
+        old_history_records = old_history.reshape((nold_history_records, ndim))
+
+        max_history_records = step_instance.max_history_records
+        if (max_history_records is not None
+                and nold_history_records > max_history_records):
+            original_nrecords = nold_history_records
+            original_size_gib = old_history.nbytes / (1024 ** 3)
+            keep_indices = _stratified_history_indices(
+                nold_history_records, max_history_records
+            )
+            old_history_records = np.asarray(old_history_records[keep_indices])
+            nold_history_records = max_history_records
+            retained_size_gib = old_history_records.nbytes / (1024 ** 3)
+            print(
+                f'History contains {original_nrecords:,} records '
+                f'({original_size_gib:.2f} GiB). Reducing history to '
+                f'{nold_history_records:,} records '
+                f'({retained_size_gib:.2f} GiB) before restart.'
+            )
+            del keep_indices
+
+        len_old_history = nold_history_records * ndim
         step_instance.nseedchains = nold_history_records
         if niterations < step_instance.history_thin:
             arr_dim = ((np.floor(
@@ -337,9 +380,13 @@ def _setup_mp_dream_pool(nchains, niterations, step_instance, start_pt=None, mp_
         ctx = mp.get_context(mp_context)
     else:
         ctx = mp_context
-    history_arr = ctx.Array('d', [0] * int(arr_dim))
+    history_arr = ctx.Array('d', int(arr_dim))
     if step_instance.history_file:
-        history_arr[0:len_old_history] = old_history.flatten()
+        history_view = np.frombuffer(history_arr.get_obj(), dtype=np.float64)
+        history_view[0:len_old_history] = old_history_records.reshape(-1)
+        del history_view
+        del old_history_records
+        del old_history
     nCR = step_instance.nCR
     ngamma = step_instance.ngamma
     crossover_setting = step_instance.CR_probabilities
