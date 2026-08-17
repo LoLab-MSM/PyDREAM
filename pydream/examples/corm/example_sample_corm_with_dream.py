@@ -20,7 +20,7 @@ from scipy.stats import norm
 import inspect
 import os.path
 
-from corm import model as cox2_model
+from pydream.examples.corm.corm import model as cox2_model
 
 pydream_path = os.path.dirname(inspect.getfile(run_dream))
 

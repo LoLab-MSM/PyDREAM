@@ -649,7 +649,7 @@ class Test_Dream_Full_Algorithm(unittest.TestCase):
     def test_history_correct_after_sampling_multidim_model(self):
         """Test that the history saved matches with the returned sampled parameter values for a multi-dimensional test model."""
         self.param, self.like = multidmodel()
-        model = Model(self.like, self.param)
+        model = Model(self.like, self.param, timeout=None)
         step = Dream(model=model, save_history=True, history_thin=1, model_name='test_history_correct', adapt_crossover=False)
         sampled_params, logps = run_dream(self.param, self.like, niterations=10, nchains=5, save_history=True, history_thin=1, model_name='test_history_correct', adapt_crossover=False, verbose=False)
         history = np.load('test_history_correct_DREAM_chain_history.npy')
