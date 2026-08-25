@@ -7,6 +7,8 @@ Created on Tue Jan 12 16:40:32 2016
 import numpy as np
 from pebble import ProcessPool
 from concurrent.futures import TimeoutError
+import psutil
+import os
 
 
 class Model(object):
@@ -37,15 +39,13 @@ class Model(object):
             try:
                 loglike = future.result()
             except TimeoutError:
-                future.cancel()  # Be explicit
                 loglike = -np.inf
-                print('TimeoutError')
-            finally:
-                pool.close()
-                pool.join()
+                print("TimeoutError", flush=True)
+            except Exception as error:
+                print(f"Likelihood worker raised {type(error).__name__}: {error}", flush=True)
+                raise
 
         # 🔍 Memory check after likelihood evaluation
-        import psutil, os
-        print(f"Memory usage: {psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2:.2f} MB")
+        print(f"Memory usage: {psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2:.2f} MB", flush=True)
 
         return prior_logp, loglike
